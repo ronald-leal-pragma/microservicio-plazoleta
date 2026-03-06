@@ -3,13 +3,24 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/powerup
+    url: jdbc:mysql://localhost:3306/plazoleta_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: root
-    password: 1234
+    password: admin
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 10
 
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
-appDescription: "Pragma Powerup"
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+appDescription: "Microservicio Plazoleta"
 appVersion: "1.0.0"
+
+user-service:
+  url: http://localhost:8081
