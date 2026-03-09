@@ -2,6 +2,7 @@ package com.pragma.plazoleta.infrastructure.exceptionhandler;
 
 import com.pragma.plazoleta.domain.exception.DomainException;
 import com.pragma.plazoleta.infrastructure.exception.NoDataFoundException;
+import com.pragma.plazoleta.infrastructure.exception.RestaurantAlreadyExistsException;
 import com.pragma.plazoleta.infrastructure.exception.UserAlreadyExistsException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -43,6 +44,17 @@ public class ControllerExceptionHandler {
                 .status(HttpStatus.CONFLICT)
                 .body(Collections.singletonMap(MESSAGE,
                         ExceptionResponse.USER_ALREADY_EXISTS.getMessage()));
+    }
+
+    /** 409 - El restaurante ya existe (NIT o nombre duplicado) */
+    @ExceptionHandler(RestaurantAlreadyExistsException.class)
+    public ResponseEntity<Map<String, String>> handleRestaurantAlreadyExistsException(
+            RestaurantAlreadyExistsException ex) {
+        log.warn("[EXCEPTION] 409 - Restaurante ya existe: NIT o nombre duplicado");
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(Collections.singletonMap(MESSAGE,
+                        ExceptionResponse.RESTAURANT_ALREADY_EXISTS.getMessage()));
     }
 
     /** 400 - Reglas de negocio del dominio (edad, formato, etc.) */

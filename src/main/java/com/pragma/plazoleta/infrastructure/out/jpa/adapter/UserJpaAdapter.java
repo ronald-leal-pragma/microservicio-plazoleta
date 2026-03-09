@@ -11,6 +11,8 @@ import com.pragma.plazoleta.infrastructure.out.jpa.repository.IUserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
 @Slf4j
 @RequiredArgsConstructor
 public class UserJpaAdapter implements IUserPersistencePort {
@@ -50,6 +52,13 @@ public class UserJpaAdapter implements IUserPersistencePort {
         userEntity.setRol(rolEntity);
         userRepository.save(userEntity);
         log.info("[JPA ADAPTER] Usuario guardado exitosamente con correo={}", userModel.getCorreo());
+    }
+
+    @Override
+    public Optional<UserModel> findUserById(Long id) {
+        log.debug("[JPA ADAPTER] Buscando usuario con id={}", id);
+        return userRepository.findById(id)
+                .map(userEntityMapper::toModel);
     }
 }
 
