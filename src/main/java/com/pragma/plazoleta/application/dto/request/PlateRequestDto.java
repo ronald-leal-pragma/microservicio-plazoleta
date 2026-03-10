@@ -29,7 +29,4 @@ public class PlateRequestDto {
 
     @NotNull(message = "El ID del restaurante es obligatorio")
     private Long idRestaurante;
-
-    @NotNull(message = "El ID del usuario propietario es obligatorio")
-    private Long idUsuarioPropietario;
 }

@@ -18,3 +18,6 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
+
+jwt:
+  secret: cGxhemFsZXRhU2VjcmV0S2V5UGFyYUpXVEF1dGhlbnRpY2F0aW9uMjAyNg==

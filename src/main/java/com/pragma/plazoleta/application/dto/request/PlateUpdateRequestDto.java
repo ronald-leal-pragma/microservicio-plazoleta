@@ -7,6 +7,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
+
 @Getter
 @Setter
 public class PlateUpdateRequestDto {
@@ -17,7 +18,4 @@ public class PlateUpdateRequestDto {
 
     @NotBlank(message = "La descripción es obligatoria")
     private String descripcion;
-
-    @NotNull(message = "El ID del usuario propietario es obligatorio")
-    private Long idUsuarioPropietario;
 }

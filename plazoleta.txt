@@ -1,0 +1,223 @@
+Plaza de comidas
+
+En este reto vas a diseñar el backend de un sistema que centraliza los pedidos de una plazoleta de comidas que tiene diferentes restaurantes, cada uno con un menú particular.
+
+La plataforma busca que cualquier persona identificada como cliente en el sistema pueda hacer un pedido en cualquier restaurante de la plazoleta, buscando en los menús de cada uno. En el portal web el Cliente podrá ver la variedad de platos que ofrece cada uno de los diferentes establecimientos.
+
+El usuario administrador de este sistema debe poder crear los restaurantes que tendrán cobertura, también podrá crearle una cuenta al propietario de cada restaurante para gestionar la información de su menú y poder realizar acciones como crear, modificar y eliminar platos de la carta y a su vez crear los usuarios para los empleados que van a atender los pedidos del establecimiento.
+
+Cada pedido realizado por un cliente pasa por varias fases:
+
+
+
+La primera fase es cuando se realiza un pedido a un restaurante, y este queda en el estado “PENDIENTE”, en esta fase el pedido se encolara en la lista de pedidos pendientes por el restaurante.
+
+Una vez el cliente haya realizado el pedido de un mismo restaurante, se notificará a los empleados de ese restaurante para que puedan asignarse a esa orden y comenzar a preparar la lista de platos.
+
+Mientras el pedido está en estado “PENDIENTE” pueden ocurrir 2 escenarios, el primero es que el pedido sea aceptado por un empleado del establecimiento y se cambie al estado “EN_PREPARACION” y el segundo escenario es que el cliente puede cancelar el pedido solo si sigue en estado PENDIENTE.
+
+Una vez finalice la elaboración del pedido, el empleado lo marcará con el estado “LISTO” y en ese momento se le enviará al cliente vía SMS un pin de seguridad para poder reclamar su pedido.
+
+Una vez le entregue el pin de seguridad al empleado del establecimiento este podrá marcar el pedido como entregado para que el cliente disfrute su elección.
+
+Un pedido es una lista de platos de un mismo restaurante, y un cliente solo puede hacer un pedido a la vez; es decir, que, si un cliente tiene un pedido en un estado “PENDIENTE”,”EN_PREPARACION” o “LISTO” no podrá realizar otro pedido hasta que el pedido actual tenga el estado “ENTREGADO” o “CANCELADO”.
+
+Cada cliente tiene la opción de poder ver la trazabilidad de los pedidos realizados con el propósito de ver cuanto tiempo paso el pedido en cada estado.
+
+Los propietarios de cada restaurante tendrán disponible una funcionalidad para ver el tiempo de duración de cada uno de los pedidos para identificar cuales pedidos son mas demorados al promedio y ver que como optimizarlos.
+
+
+Funcionalidades no contempladas:
+No se contempla un flujo asociado al pago, ya que se encuentra contratado con otro proveedor.
+Esta aplicación no contempla el desarrollo de frontend y pretende reemplazar un backend actual que se encuentra construido con tecnologías obsoletas.
+
+
+Rol
+Microservicio
+Funcionalidades
+Administrador
+
+
+Crear restaurante
+Crear cuenta propietario
+Propietario
+
+
+Crear platos.
+Modificar el plato.
+Eliminar el plato.
+Crear cuenta empleado.
+Ver tiempos de pedidos
+Empleado
+
+
+Listar pedidos en estado “PENDIENTE”.
+Asignarse a pedido como Chef (cambiar estado a “EN_PREPARACION”).
+Notificar que el pedido está listo.
+Entregar pedido.
+Cliente
+
+
+Listar los restaurantes.
+Listar platos por restaurante.
+Realizar pedido.
+Cancelar pedido.
+Ver trazabilidad
+
+
+
+Flujo de Estado del Pedido del Restaurante
+
+1. Creación del Pedido (Estado Inicial)
+
+El proceso comienza cuando el Cliente crea un pedido a un único restaurante.
+
+El estado del pedido se establece automáticamente como PENDIENTE.
+
+2. Ramificación de Acciones desde Pendiente
+
+Desde el estado PENDIENTE, hay dos posibles caminos de acción:
+
+A. Se acepta el pedido (Camino de Éxito):
+
+Un Empleado del establecimiento toma la acción de aceptar el pedido.
+
+El objetivo es empezar a prepararlo.
+
+Cambio de Estado: El pedido pasa de PENDIENTE a EN_PREPARACION.
+
+B. Se cancela el pedido (Camino de Cancelación):
+
+El Cliente toma la acción de anular el pedido solicitado.
+
+Cambio de Estado: El pedido pasa de PENDIENTE directamente a CANCELADO. Este es un estado final para este pedido.
+
+3. Preparación e Hito de "Pedido Listo" (Continuación del Camino A)
+
+Para los pedidos aceptados y en estado de EN_PREPARACION, una vez completada la preparación:
+
+Un Empleado marca el pedido como "Listo".
+
+Cambio de Estado: El pedido pasa de EN_PREPARACION a LISTO.
+
+Acciones Automatizadas: En este punto, el sistema realiza dos acciones:
+
+El cliente es notificado de que su pedido está listo para reclamar.
+
+Se le envía un pin de seguridad al cliente para reclamar su pedido.
+
+4. Entrega del Pedido (Estado Final del Camino A)
+
+El cliente llega al establecimiento a reclamar su pedido.
+
+El Cliente presenta el pin de seguridad recibido.
+
+El Empleado verifica el pin y luego marca el pedido como "entregado" en el sistema.
+
+Cambio de Estado: El pedido pasa de LISTO a su estado final de ENTREGADO.
+
+
+
+HU a realizar
+
+# HU	Rol	Historia de Usuario	Descripcion	Criterios de aceptacion
+1	Cliente	Crear Propietario	"Yo como Administrador de la plataforma de plazoleta de comidas
+necesito poder crear en el sistema la cuenta para un propietario
+para poder crear un restaurante a cargo de un propietario"	"1. Al crear una cuenta, se deben solicitar los siguientes campos obligatorios:
+Nombre, Apellido, DocumentoDeIdentidad, celular, fechaNacimiento, correo y clave(encriptada con bcrypt)
+2. Se debe verificar estructura de email válida, el teléfono debe contener un máximo de 13 caracteres y puede contener el símbolo +. Ejemplo: +573005698325, El documento de identidad debe ser únicamente numérico.
+3. El usuario quedara con el rol propietario.
+4. El usuario debe ser mayor de edad"
+2	Administrador	Crear Restaurante	"Yo como administrador de la plazoleta de comidas
+necesito poder crear en el sistema los restaurantes
+para brindarle al cliente la posibilidad de escoger en cual pedir sus alimentos."	"1. La creación de un restaurante requiere los siguientes campos obligatorios:
+Nombre, NIT, Direccion, Telefono, UrlLogo y el id del usuario propitario.
+2. Al momento de la creación del restaurante, se debe validar que el el id del usuario corresponda a un usuario con ese rol.
+3. Los campos NIT y TelefonoRestaurante deben ser únicamente numéricos. El campo TelefonoRestaurante debe contener un máximo de 13 caracteres y puede contener el símbolo +. Ejemplo: +573005698325.
+4. El nombre del restaurante puede contener números, pero no se permiten nombres con sólo números."
+3	Propietario	Crear Plato.	"Yo como propietario de un restaurante
+necesito crear platos para asociarlos al menú de mi restaurante
+para brindarle diferentes opciones de platos al cliente"	"1. Solo el propietario de un restaurante puede crear platos.
+2. Para crear un plato se deben solicitar los siguientes campos obligatorios:
+Nombre del plato, precio del plato (en números enteros positivos y mayores a 0), Descripción, UrlImagen y la categoria.
+3. Todo plato debe estar asociado a un restaurante.
+4. por defecto cada plato recien creado tiene la variable activa en true. "
+4	Propietario	Modificar Plato.	"Yo como propietario de un restaurante
+necesito actualizar la información de los platos en el menú 
+para corregir valores errados o actualizar precios"	1. Solo se puede modificar precio y descripcion.
+5	Administrador / Propietario / Empleado	Agregar Autenticacion al sistema	"Yo como administrador / cliente / propietario / empleado
+necesito agregar la autenticacion al sistema
+para poder acceder a las funcionalidades que le corresponden a mi rol y exponer mis servicios solo a usuarios logiados"	"1. El inicio de sesión es a través de correo y clave.
+2. Se debe validar usuario y contraseña correcta.
+3. El número de intentos puede ser ilimitado.
+4. Una vez iniciada la sesión, se debe garantizar que con esa sesión iniciada, cada usuario tiene los permisos para realizar las acciones que le correspondan a su rol.
+5. Agregar validacion de autenticacion a los siguientes endpoint:
+    -si creo un usuario propietario, validar que la persona que llamo el servicio sera usuario administrador.
+    -si creo un usuario empleado, validar que la persona que llamo el servicio sea usuario propietario.
+    -si creo un restaurante, validar que la persona que llamo el servicio sea un usuario administrador.
+    -si creo/modifico un plato, validar que la persona que llamo el servicio sea un usuario propietario y sea el propietario del restaurante al cual se le va a asignar ese plato.
+Nota: En esta versión de la aplicación, no está contemplada la recuperación de contraseña.
+"
+6	Propietario	Crear cuenta empleado	"Yo como propietario de un restaurante 
+necesito poder crearles cuentas a los empleados
+para que puedan acceder al sistema y administrar los pedidos"	"1. Solo el propietario puede crearle cuentas a los empleados de su empresa
+2. Al crear una cuenta para empleado, se deben solicitar los siguientes campos obligatorios:
+Nombre, Apellido, DocumentoDeIdentidad, celular, correo, idRol y clave(encriptada con bcrypt).
+3. El usuario quedara con el rol empleado."
+7	Propietario	Habilitar/Deshabilitar Plato	"Yo como propietario de un restaurante
+necesito activar/desactivar platos en el menú 
+para dejar de ofrecer el producto en el menú"	"1. Solo el propietario puede habilitar/deshabilitar platos.
+2. No se permiten modificar platos de otros restaurantes diferentes al propio."
+8	Cliente	Crear cuenta Cliente	"Yo como cliente de la plazoleta de comida 
+necesito poder crear mi cuenta 
+para que puedan acceder al sistema y Realizar pedidos"	"1. Al crear una cuenta para Cliente, se deben solicitar los siguientes campos obligatorios:
+Nombre, Apellido, DocumentoDeIdentidad, celular, correo, idRol y clave(encriptada con bcrypt).
+3. El usuario quedara con el rol cliente."""
+9	Cliente	Listar los restaurantes	"Yo como cliente de la plazoleta de comidas
+necesito listar los restaurantes disponibles
+para poder elegir en cual deseo ordenar un plato"	"1. Se deben listar todos los restaurantes por orden alfabético y paginados de acuerdo con un campo que permita especificar cuántos elementos por página.
+2. Los campos devueltos de cada restaurante deben ser: Nombre, UrlLogo"
+10	Cliente	Listar los platos de un restaurante	"Yo como cliente de la plazoleta de comidas
+necesito listar el menú de cada restaurante al que le doy clic
+para poder solicitar el plato de mi preferencia"	"1. Se deben listar paginados y poderse filtrar por categoría los platos de cada menú.
+2. Se debe poder paginar de acuerdo con el número de elementos por página escogido."
+11	Cliente	Realizar pedido	"Yo como cliente de la plazoleta de comidas
+necesito poder solicitar los platos de mi preferencia
+para que puedan prepararlos y traerlos a mi mesa"	"1. Un pedido consta de una lista de platos de un mismo restaurante.
+2, Todo pedido debe especificar el restaurante, los platos escogidos y la cantidad de cada uno de esos platos.
+3. Inmediatamente después de recibir un pedido, este debe quedar con estado ""Pendiente"".
+4. El cliente puede solicitar un nuevo pedido, solo si no tiene ningun pedido en proceso(en_preparacion,pendiente o listo)"
+12	Empleado	Obtener lista de pedidos filtrando por estado	"Yo como empleado de un restaurante
+necesito visualizar la lista de pedidos filtrando por estado
+para poder seleccionar aquel pedido al que necesite cambiarle su estado"	"1. El servicio debe devolver la lista de pedidos de acuerdo con un filtro por estado.
+2. El servicio debe estar paginado y se le debe especificar la cantidad de elementos por página.
+3. Se deben listar todos los campos del pedido. 
+4. Solo se pueden listar los pedidos del restaurante al que pertenece el empleado."
+13	Empleado	Asignarse a un pedido y cambiar estado a "en preparación"	"Yo como empleado de un restaurante
+necesito asignarme a un pedido y cambiarle su estado
+para que el cliente pueda saber el avance de su orden."	"1. El servicio debe devolver la lista de pedidos de acuerdo con un filtro por estado.
+2. El servicio debe estar paginado y se le debe especificar la cantidad de elementos por página.
+3. Se deben listar todos los campos del pedido. 
+4. Solo se pueden listar los pedidos del restaurante al que pertenece el empleado.
+5. Asignarse a un pedido significa que en el campo EmpleadoAsignado se pone el id de quien se asigna a ese pedido."
+14	Empleado	Notificar que el pedido está listo	"Yo como empleado de un restaurante
+necesito notificar al cliente de que su pedido está listo
+para que tenga la certeza de que en pocos minutos lo podra recoger."	1. Cuando un pedido está listo, se le debe notificar al cliente que su pedido está listo a través de mensaje SMS al telefono indicando el pin de seguridad para reclamar su pedido.
+15	Empleado	Entregar pedido (Marcarlo como entregado)	"Yo como empleado de un restaurante
+necesito marcar como entregado un pedido 
+para poder cerrar el ciclo del mismo y concentrarme en otros pedidos"	"1. Sólo los pedidos que están en estado ""Listo"" pueden pasar a estado ""entregado""
+2. Ningún pedido en estado ""entregado"" puede ser modificado a cualquier estado diferente de ""Listo"".
+3. Par apoder cambiar al estado ""entregado"" el empleado debe digitar el pin de seguridad que le fue enviado al cliente para reclamar su pedido."
+16	Cliente	Cancelar pedido	"Yo como cliente de un restaurante
+necesito poder cancelar mi pedido
+para tener la posibilidad de retractarme por cualquier motivo"	"1. Sólo se pueden cancelar pedidos que se encuentren en estado ""Pendiente""
+2, Si el estado del pedido que tratan de cancelar es diferente a ""Pendiente"", se le debe notificar al usuario: ""Lo sentimos, tu pedido ya está en preparación y no puede cancelarse"""
+17	Cliente	Consultar trazabilidad del pedido	"Yo como cliente de un restaurate
+necesito poder visualizar los cambios de estado de mi pedido 
+para ver la rapides del servicio solicitado."	"1. Se debe crear un registro de cada cambio de estado de un pedido 
+2. Cada cliente puede consultar el historial de logs solo de sus propios pedidos."
+18	Propietario	Consultar la eficiencia de los pedidos 	"Yo como propietario de un restaurante
+necesito poder saber que eficiencia estan teniendo los pedidos del restaurante
+para dar una mejor experiencia a los clientes"	"1. mostrar de cada pedido, cual es el tiempo entre que un pedido inicia y un pedido termina
+2. mostrar por empleado, un raking de cual es el tiempo medio entre que un pedido inicia y un pedido termina
+"

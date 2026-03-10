@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
 @Getter
@@ -28,7 +27,4 @@ public class RestaurantRequestDto {
 
     @NotBlank(message = "La URL del logo es obligatoria")
     private String urlLogo;
-
-    @NotNull(message = "El ID del usuario propietario es obligatorio")
-    private Long idUsuarioPropietario;
 }
