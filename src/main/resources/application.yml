@@ -18,9 +18,3 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
-
-appDescription: "Microservicio Plazoleta"
-appVersion: "1.0.0"
-
-user-service:
-  url: http://localhost:8081
