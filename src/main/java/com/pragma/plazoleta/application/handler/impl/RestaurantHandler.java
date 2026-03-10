@@ -5,10 +5,8 @@ import com.pragma.plazoleta.application.handler.IRestaurantHandler;
 import com.pragma.plazoleta.application.mapper.IRestaurantRequestMapper;
 import com.pragma.plazoleta.domain.api.IRestaurantServicePort;
 import com.pragma.plazoleta.domain.model.RestaurantModel;
-import com.pragma.plazoleta.infrastructure.configuration.jwt.JwtUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,19 +21,11 @@ public class RestaurantHandler implements IRestaurantHandler {
 
     @Override
     public void saveRestaurant(RestaurantRequestDto restaurantRequestDto) {
-        log.info("[HANDLER] Iniciando proceso de creación de restaurante: nombre={}", 
-                restaurantRequestDto.getNombre());
-        Long idUsuarioPropietario = getAuthenticatedUserId();
+        log.info("[HANDLER] Iniciando proceso de creación de restaurante: nombre={}, propietario={}",
+                restaurantRequestDto.getNombre(), restaurantRequestDto.getIdUsuarioPropietario());
         RestaurantModel restaurantModel = restaurantRequestMapper.toRestaurant(restaurantRequestDto);
-        restaurantModel.setIdUsuarioPropietario(idUsuarioPropietario);
         restaurantServicePort.saveRestaurant(restaurantModel);
-        log.info("[HANDLER] Proceso finalizado correctamente para restaurante: {}", 
+        log.info("[HANDLER] Proceso finalizado correctamente para restaurante: {}",
                 restaurantRequestDto.getNombre());
-    }
-
-    private Long getAuthenticatedUserId() {
-        JwtUserDetails userDetails = (JwtUserDetails) SecurityContextHolder
-                .getContext().getAuthentication().getPrincipal();
-        return userDetails.getId();
     }
 }

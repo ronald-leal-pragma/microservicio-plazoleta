@@ -2,7 +2,6 @@ package com.pragma.plazoleta.infrastructure.exceptionhandler;
 
 import com.pragma.plazoleta.domain.exception.DomainException;
 import com.pragma.plazoleta.infrastructure.exception.NoDataFoundException;
-import com.pragma.plazoleta.infrastructure.exception.UserAlreadyExistsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,7 +15,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 class ControllerExceptionHandlerTest {
@@ -38,18 +38,6 @@ class ControllerExceptionHandlerTest {
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals(ExceptionResponse.NO_DATA_FOUND.getMessage(), response.getBody().get("message"));
-    }
-
-    @Test
-    @DisplayName("Debe retornar 409 cuando se lanza UserAlreadyExistsException")
-    void handleUserAlreadyExistsException_shouldReturn409() {
-        UserAlreadyExistsException ex = new UserAlreadyExistsException();
-
-        ResponseEntity<Map<String, String>> response = handler.handleUserAlreadyExistsException(ex);
-
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(ExceptionResponse.USER_ALREADY_EXISTS.getMessage(), response.getBody().get("message"));
     }
 
     @Test

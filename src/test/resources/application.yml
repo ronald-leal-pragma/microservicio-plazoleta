@@ -16,7 +16,10 @@ spring:
       name: user
       password: password
 
-appDescription: "Microservicio Plazoleta - Test"
-appVersion: "1.0.0"
-user-service:
-  url: http://localhost:8081
+appdescription: "Microservicio Plazoleta - Test"
+appversion: "1.0.0"
+jwt:
+  secret: cGxhemFsZXRhU2VjcmV0S2V5UGFyYUpXVEF1dGhlbnRpY2F0aW9uMjAyNg==
+usuarios:
+  service:
+    url: http://localhost:8082

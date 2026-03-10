@@ -3,7 +3,6 @@ package com.pragma.plazoleta.infrastructure.exceptionhandler;
 import com.pragma.plazoleta.domain.exception.DomainException;
 import com.pragma.plazoleta.infrastructure.exception.NoDataFoundException;
 import com.pragma.plazoleta.infrastructure.exception.RestaurantAlreadyExistsException;
-import com.pragma.plazoleta.infrastructure.exception.UserAlreadyExistsException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,17 +32,6 @@ public class ControllerExceptionHandler {
                 .status(HttpStatus.NOT_FOUND)
                 .body(Collections.singletonMap(MESSAGE,
                         ExceptionResponse.NO_DATA_FOUND.getMessage()));
-    }
-
-    /** 409 - El usuario ya existe (correo o documento duplicado) */
-    @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<Map<String, String>> handleUserAlreadyExistsException(
-            UserAlreadyExistsException ex) {
-        log.warn("[EXCEPTION] 409 - Usuario ya existe: correo o documento duplicado");
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(Collections.singletonMap(MESSAGE,
-                        ExceptionResponse.USER_ALREADY_EXISTS.getMessage()));
     }
 
     /** 409 - El restaurante ya existe (NIT o nombre duplicado) */

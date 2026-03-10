@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
 @Getter
@@ -21,10 +22,13 @@ public class RestaurantRequestDto {
     private String direccion;
 
     @NotBlank(message = "El teléfono es obligatorio")
-    @Pattern(regexp = "^\\+?[0-9]{1,13}$", 
+    @Pattern(regexp = "^\\+?[0-9]{1,13}$",
              message = "El teléfono debe ser numérico, puede contener el símbolo '+' y tener máximo 13 caracteres")
     private String telefono;
 
     @NotBlank(message = "La URL del logo es obligatoria")
     private String urlLogo;
+
+    @NotNull(message = "El ID del propietario es obligatorio")
+    private Long idUsuarioPropietario;
 }

@@ -21,3 +21,10 @@ spring:
 
 jwt:
   secret: cGxhemFsZXRhU2VjcmV0S2V5UGFyYUpXVEF1dGhlbnRpY2F0aW9uMjAyNg==
+
+usuarios:
+  service:
+    url: http://localhost:8082
+
+appdescription: API del microservicio Plazoleta - gestión de restaurantes y platos
+appversion: 1.0.0
