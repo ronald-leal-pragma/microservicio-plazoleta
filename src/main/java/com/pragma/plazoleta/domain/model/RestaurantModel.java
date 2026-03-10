@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -17,4 +19,5 @@ public class RestaurantModel {
     private String telefono;
     private String urlLogo;
     private Long idUsuarioPropietario;
+    private Instant creadoEn;
 }

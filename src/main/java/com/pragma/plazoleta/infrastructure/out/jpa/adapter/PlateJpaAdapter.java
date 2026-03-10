@@ -19,7 +19,7 @@ public class PlateJpaAdapter implements IPlatePersistencePort {
     private final IPlateEntityMapper plateEntityMapper;
 
     @Override
-    public void savePlate(PlateModel plateModel) {
+    public PlateModel savePlate(PlateModel plateModel) {
         log.info("[JPA ADAPTER] Verificando si el plato existe: nombre={}, restaurante={}",
                 plateModel.getNombre(), plateModel.getIdRestaurante());
 
@@ -34,10 +34,11 @@ public class PlateJpaAdapter implements IPlatePersistencePort {
         PlateEntity plateEntity = plateEntityMapper.toEntity(plateModel);
         
         log.debug("[JPA ADAPTER] Guardando plato en base de datos");
-        plateRepository.save(plateEntity);
+        PlateEntity saved = plateRepository.save(plateEntity);
         
         log.info("[JPA ADAPTER] Plato guardado exitosamente: nombre={}, precio={}",
                 plateModel.getNombre(), plateModel.getPrecio());
+        return plateEntityMapper.toModel(saved);
     }
 
     @Override
@@ -48,13 +49,14 @@ public class PlateJpaAdapter implements IPlatePersistencePort {
     }
 
     @Override
-    public void updatePlate(PlateModel plateModel) {
+    public PlateModel updatePlate(PlateModel plateModel) {
         log.info("[JPA ADAPTER] Actualizando plato: id={}", plateModel.getId());
         
         PlateEntity plateEntity = plateEntityMapper.toEntity(plateModel);
-        plateRepository.save(plateEntity);
+        PlateEntity saved = plateRepository.save(plateEntity);
         
         log.info("[JPA ADAPTER] Plato actualizado exitosamente: id={}, precio={}",
                 plateModel.getId(), plateModel.getPrecio());
+        return plateEntityMapper.toModel(saved);
     }
 }

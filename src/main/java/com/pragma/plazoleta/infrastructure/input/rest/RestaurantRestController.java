@@ -1,9 +1,11 @@
 package com.pragma.plazoleta.infrastructure.input.rest;
 
 import com.pragma.plazoleta.application.dto.request.RestaurantRequestDto;
+import com.pragma.plazoleta.application.dto.response.RestaurantResponseDto;
 import com.pragma.plazoleta.application.handler.IRestaurantHandler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,18 +32,21 @@ public class RestaurantRestController {
     @Operation(summary = "Crear restaurante",
                description = "Crea un nuevo restaurante en el sistema")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Restaurante creado exitosamente"),
+            @ApiResponse(responseCode = "201", description = "Restaurante creado exitosamente",
+                         content = @Content(schema = @Schema(implementation = RestaurantResponseDto.class))),
             @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos",
                          content = @Content),
             @ApiResponse(responseCode = "409", description = "El restaurante ya existe",
                          content = @Content)
     })
     @PostMapping("/")
-    public ResponseEntity<Void> saveRestaurant(@Valid @RequestBody RestaurantRequestDto restaurantRequestDto) {
+    public ResponseEntity<RestaurantResponseDto> saveRestaurant(
+            @Valid @RequestBody RestaurantRequestDto restaurantRequestDto) {
         log.info("[REST] POST /restaurant/ - Solicitud para crear restaurante: {}", 
                 restaurantRequestDto.getNombre());
-        restaurantHandler.saveRestaurant(restaurantRequestDto);
+        RestaurantResponseDto created = restaurantHandler.saveRestaurant(restaurantRequestDto);
         log.info("[REST] Restaurante creado exitosamente: {}", restaurantRequestDto.getNombre());
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 }
+

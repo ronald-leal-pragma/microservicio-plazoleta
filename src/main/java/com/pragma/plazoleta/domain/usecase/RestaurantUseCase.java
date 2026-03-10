@@ -24,7 +24,7 @@ public class RestaurantUseCase implements IRestaurantServicePort {
     }
 
     @Override
-    public void saveRestaurant(RestaurantModel restaurantModel) {
+    public RestaurantModel saveRestaurant(RestaurantModel restaurantModel) {
         log.info("[USE CASE] Iniciando validaciones para crear restaurante: nombre={}", 
                 restaurantModel.getNombre());
 
@@ -41,8 +41,9 @@ public class RestaurantUseCase implements IRestaurantServicePort {
         validateOwnerUser(restaurantModel.getIdUsuarioPropietario());
 
         log.info("[USE CASE] Todas las validaciones OK, persistiendo restaurante");
-        restaurantPersistencePort.saveRestaurant(restaurantModel);
+        RestaurantModel saved = restaurantPersistencePort.saveRestaurant(restaurantModel);
         log.info("[USE CASE] Restaurante creado exitosamente: {}", restaurantModel.getNombre());
+        return saved;
     }
 
     private void validateRestaurantName(String nombre) {

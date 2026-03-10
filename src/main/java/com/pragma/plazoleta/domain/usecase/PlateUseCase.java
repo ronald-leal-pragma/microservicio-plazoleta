@@ -24,7 +24,7 @@ public class PlateUseCase implements IPlateServicePort {
     }
 
     @Override
-    public void savePlate(PlateModel plateModel, Long idUsuarioPropietario) {
+    public PlateModel savePlate(PlateModel plateModel, Long idUsuarioPropietario) {
         log.info("[USE CASE] Iniciando validaciones para crear plato: nombre={}, restaurante={}", 
                 plateModel.getNombre(), plateModel.getIdRestaurante());
 
@@ -46,12 +46,13 @@ public class PlateUseCase implements IPlateServicePort {
         log.debug("[USE CASE] Plato configurado como activo por defecto");
 
         log.info("[USE CASE] Todas las validaciones OK, persistiendo plato");
-        platePersistencePort.savePlate(plateModel);
+        PlateModel saved = platePersistencePort.savePlate(plateModel);
         log.info("[USE CASE] Plato creado exitosamente: {}", plateModel.getNombre());
+        return saved;
     }
 
     @Override
-    public void updatePlate(Long idPlate, Integer precio, String descripcion, Long idUsuarioPropietario) {
+    public PlateModel updatePlate(Long idPlate, Integer precio, String descripcion, Long idUsuarioPropietario) {
         log.info("[USE CASE] Iniciando actualización de plato: id={}", idPlate);
 
         // Validación 1: El precio debe ser un entero positivo mayor a 0
@@ -79,8 +80,9 @@ public class PlateUseCase implements IPlateServicePort {
         plate.setDescripcion(descripcion);
         
         log.info("[USE CASE] Actualizando plato en base de datos");
-        platePersistencePort.updatePlate(plate);
+        PlateModel updated = platePersistencePort.updatePlate(plate);
         log.info("[USE CASE] Plato actualizado exitosamente: id={}", idPlate);
+        return updated;
     }
 
     private void validatePrice(Integer precio) {

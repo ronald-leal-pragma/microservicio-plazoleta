@@ -5,7 +5,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import javax.persistence.*;
+import java.time.Instant;
 
 @Entity
 @Table(name = "plato")
@@ -39,4 +42,8 @@ public class PlateEntity {
 
     @Column(name = "id_restaurante", nullable = false)
     private Long idRestaurante;
+
+    @CreationTimestamp
+    @Column(name = "creado_en", nullable = false, updatable = false)
+    private Instant creadoEn;
 }

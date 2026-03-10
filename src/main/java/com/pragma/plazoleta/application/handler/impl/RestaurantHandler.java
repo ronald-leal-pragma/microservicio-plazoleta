@@ -1,6 +1,7 @@
 package com.pragma.plazoleta.application.handler.impl;
 
 import com.pragma.plazoleta.application.dto.request.RestaurantRequestDto;
+import com.pragma.plazoleta.application.dto.response.RestaurantResponseDto;
 import com.pragma.plazoleta.application.handler.IRestaurantHandler;
 import com.pragma.plazoleta.application.mapper.IRestaurantRequestMapper;
 import com.pragma.plazoleta.domain.api.IRestaurantServicePort;
@@ -20,12 +21,18 @@ public class RestaurantHandler implements IRestaurantHandler {
     private final IRestaurantRequestMapper restaurantRequestMapper;
 
     @Override
-    public void saveRestaurant(RestaurantRequestDto restaurantRequestDto) {
+    public RestaurantResponseDto saveRestaurant(RestaurantRequestDto restaurantRequestDto) {
         log.info("[HANDLER] Iniciando proceso de creación de restaurante: nombre={}, propietario={}",
                 restaurantRequestDto.getNombre(), restaurantRequestDto.getIdUsuarioPropietario());
         RestaurantModel restaurantModel = restaurantRequestMapper.toRestaurant(restaurantRequestDto);
-        restaurantServicePort.saveRestaurant(restaurantModel);
+        RestaurantModel saved = restaurantServicePort.saveRestaurant(restaurantModel);
         log.info("[HANDLER] Proceso finalizado correctamente para restaurante: {}",
                 restaurantRequestDto.getNombre());
+        RestaurantResponseDto dto = new RestaurantResponseDto();
+        dto.setId(saved.getId());
+        dto.setNombre(saved.getNombre());
+        dto.setNit(saved.getNit());
+        dto.setCreadoEn(saved.getCreadoEn() != null ? saved.getCreadoEn().toString() : null);
+        return dto;
     }
 }

@@ -19,7 +19,7 @@ public class RestaurantJpaAdapter implements IRestaurantPersistencePort {
     private final IRestaurantEntityMapper restaurantEntityMapper;
 
     @Override
-    public void saveRestaurant(RestaurantModel restaurantModel) {
+    public RestaurantModel saveRestaurant(RestaurantModel restaurantModel) {
         log.info("[JPA ADAPTER] Verificando duplicados para NIT={} y nombre={}",
                 restaurantModel.getNit(), restaurantModel.getNombre());
 
@@ -37,10 +37,11 @@ public class RestaurantJpaAdapter implements IRestaurantPersistencePort {
         RestaurantEntity restaurantEntity = restaurantEntityMapper.toEntity(restaurantModel);
         
         log.debug("[JPA ADAPTER] Guardando restaurante en base de datos");
-        restaurantRepository.save(restaurantEntity);
+        RestaurantEntity saved = restaurantRepository.save(restaurantEntity);
         
         log.info("[JPA ADAPTER] Restaurante guardado exitosamente: nombre={}, NIT={}",
                 restaurantModel.getNombre(), restaurantModel.getNit());
+        return restaurantEntityMapper.toModel(saved);
     }
 
     @Override
