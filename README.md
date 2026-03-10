@@ -1,61 +1,54 @@
-<br />
-<div align="center">
-<h3 align="center">MICROSERVICIO PLAZOLETA</h3>
-  <p align="center">
-    In this challenge you are going to design the backend of a system that centralizes the services and orders of a restaurant chain that has different branches in the city.
-  </p>
-</div>
+# Microservicio Plazoleta
 
-### Built With
+Guia minima para ejecutar el servicio en local.
 
-* ![Java](https://img.shields.io/badge/java-%23ED8B00.svg?style=for-the-badge&logo=java&logoColor=white)
-* ![Spring](https://img.shields.io/badge/Spring-6DB33F?style=for-the-badge&logo=spring&logoColor=white)
-* ![Gradle](https://img.shields.io/badge/Gradle-02303A.svg?style=for-the-badge&logo=Gradle&logoColor=white)
-* ![MySQL](https://img.shields.io/badge/MySQL-00000F?style=for-the-badge&logo=mysql&logoColor=white)
+## Requisitos
 
+- Java 21
+- MySQL 8+ en ejecucion local
+- Git (opcional)
 
-<!-- GETTING STARTED -->
-## Getting Started
+## Configuracion minima
 
-To get a local copy up and running follow these steps.
+La configuracion principal esta en `src/main/resources/application.yml`.
 
-### Prerequisites
+Valores relevantes por defecto:
+- Puerto del servicio: `8081`
+- Base de datos: `plazoleta_db` en `localhost:3306`
+- Usuario DB: `root`
+- Password DB: `admin`
+- URL de servicio externo de usuarios: `http://localhost:8082`
 
-* JDK 11 [https://jdk.java.net/java-se-ri/11](https://jdk.java.net/java-se-ri/11)
-* Gradle [https://gradle.org/install/](https://gradle.org/install/)
-* MySQL [https://dev.mysql.com/downloads/installer/](https://dev.mysql.com/downloads/installer/)
+Si tu entorno usa otros valores, actualiza `src/main/resources/application.yml` antes de iniciar.
 
-### Recommended Tools
-* IntelliJ Community [https://www.jetbrains.com/idea/download/](https://www.jetbrains.com/idea/download/)
-* Postman [https://www.postman.com/downloads/](https://www.postman.com/downloads/)
+## Levantar el servicio
 
-### Installation
+Desde la raiz del proyecto:
 
-1. Clone the repo
-2. Change directory
-   ```sh
-   cd microservicio-plazoleta
-   ```
-3. Create a new database in MySQL called plazoleta_db
-4. Update the database connection settings 
-   ```yml
-   # src/main/resources/application.yml   
-   spring:
-      datasource:
-          url: jdbc:mysql://localhost/plazoleta_db
-          username: root
-          password: 1234
-   ```
+```bash
+./gradlew bootRun
+```
 
-<!-- USAGE -->
-## Usage
+En Windows (PowerShell):
 
-1. Right-click the class PlazoletaApplication and choose Run
-2. Open [http://localhost:8081/swagger-ui/index.html](http://localhost:8081/swagger-ui/index.html) in your web browser
+```powershell
+.\gradlew.bat bootRun
+```
 
-<!-- ROADMAP -->
-## Tests
+La API quedara disponible en:
+- `http://localhost:8081`
+- Swagger UI: `http://localhost:8081/swagger-ui/index.html`
 
-- Right-click the test folder and choose Run tests with coverage
+## Ejecutar pruebas
 
+```bash
+./gradlew test
+```
 
+En Windows (PowerShell):
+
+```powershell
+.\gradlew.bat test
+```
+
+Las pruebas usan H2 en memoria segun `src/test/resources/application.yml`.
