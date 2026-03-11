@@ -1,12 +1,13 @@
 package com.pragma.plazoleta.infrastructure.out.http.dto;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
+@Builder
 public class UserResponseDto {
     private Long id;
     private String nombre;

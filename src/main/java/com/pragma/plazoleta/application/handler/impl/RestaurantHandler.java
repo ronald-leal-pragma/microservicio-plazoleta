@@ -24,6 +24,7 @@ public class RestaurantHandler implements IRestaurantHandler {
     public RestaurantResponseDto saveRestaurant(RestaurantRequestDto restaurantRequestDto) {
         log.info("[HANDLER] Iniciando proceso de creación de restaurante: nombre={}, propietario={}",
                 restaurantRequestDto.getNombre(), restaurantRequestDto.getIdUsuarioPropietario());
+
         RestaurantModel restaurantModel = restaurantRequestMapper.toRestaurant(restaurantRequestDto);
         RestaurantModel saved = restaurantServicePort.saveRestaurant(restaurantModel);
         log.info("[HANDLER] Proceso finalizado correctamente para restaurante: {}",

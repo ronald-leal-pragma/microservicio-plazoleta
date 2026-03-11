@@ -22,32 +22,32 @@ public class UserHttpAdapter implements IUserPersistencePort {
 
     @Override
     public Optional<UserModel> findUserById(Long id) {
-        String url = usuariosServiceUrl + "/user/" + id;
+        String url = String.format("%s/user/%d", usuariosServiceUrl, id);
         log.debug("[HTTP ADAPTER] Consultando usuario id={} en {}", id, url);
+
         try {
-            ResponseEntity<UserResponseDto> response = restTemplate.getForEntity(url, UserResponseDto.class);
-            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                UserResponseDto dto = response.getBody();
-                UserModel model = new UserModel();
-                model.setId(dto.getId());
-                model.setNombre(dto.getNombre());
-                model.setApellido(dto.getApellido());
-                model.setCorreo(dto.getCorreo());
-                if (dto.getRol() != null) {
-                    RolModel rolModel = new RolModel();
-                    rolModel.setNombre(dto.getRol());
-                    model.setRol(rolModel);
-                }
-                log.debug("[HTTP ADAPTER] Usuario encontrado: id={}, rol={}", id, dto.getRol());
-                return Optional.of(model);
-            }
-            return Optional.empty();
+            return Optional.of(restTemplate.getForEntity(url, UserResponseDto.class))
+                    .filter(response -> response.getStatusCode().is2xxSuccessful())
+                    .map(ResponseEntity::getBody)
+                    .map(this::mapToModel);
         } catch (HttpClientErrorException.NotFound e) {
             log.warn("[HTTP ADAPTER] Usuario no encontrado: id={}", id);
             return Optional.empty();
         } catch (Exception e) {
-            log.error("[HTTP ADAPTER] Error consultando microservicio-usuarios: {}", e.getMessage());
+            log.error("[HTTP ADAPTER] Error inesperado en microservicio-usuarios: {}", e.getMessage());
             return Optional.empty();
         }
+    }
+
+    private UserModel mapToModel(UserResponseDto dto) {
+        return UserModel.builder()
+                .id(dto.getId())
+                .nombre(dto.getNombre())
+                .apellido(dto.getApellido())
+                .correo(dto.getCorreo())
+                .rol(Optional.ofNullable(dto.getRol())
+                        .map(rolNombre -> RolModel.builder().nombre(rolNombre).build())
+                        .orElse(null))
+                .build();
     }
 }

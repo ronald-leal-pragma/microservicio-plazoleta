@@ -20,25 +20,22 @@ public class PlateJpaAdapter implements IPlatePersistencePort {
 
     @Override
     public PlateModel savePlate(PlateModel plateModel) {
-        log.info("[JPA ADAPTER] Verificando si el plato existe: nombre={}, restaurante={}",
-                plateModel.getNombre(), plateModel.getIdRestaurante());
-
-        if (plateRepository.existsByNombreAndIdRestaurante(
-                plateModel.getNombre(), plateModel.getIdRestaurante())) {
-            log.warn("[JPA ADAPTER] Plato ya existe en este restaurante: nombre={}", 
-                    plateModel.getNombre());
-            throw new NoDataFoundException();
-        }
-
         log.debug("[JPA ADAPTER] Mapeando modelo a entidad");
         PlateEntity plateEntity = plateEntityMapper.toEntity(plateModel);
-        
+
         log.debug("[JPA ADAPTER] Guardando plato en base de datos");
         PlateEntity saved = plateRepository.save(plateEntity);
-        
+
         log.info("[JPA ADAPTER] Plato guardado exitosamente: nombre={}, precio={}",
                 plateModel.getNombre(), plateModel.getPrecio());
+
         return plateEntityMapper.toModel(saved);
+    }
+
+    @Override
+    public boolean existsPlateByNameAndRestaurantId(String name, Long restaurantId) {
+        log.debug("[JPA ADAPTER] Consultando existencia de plato: nombre={}, restaurante={}", name, restaurantId);
+        return plateRepository.existsByNombreAndIdRestaurante(name, restaurantId);
     }
 
     @Override

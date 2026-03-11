@@ -66,7 +66,7 @@ class ControllerExceptionHandlerTest {
     void handleHttpMessageNotReadableException_shouldReturn400() {
         HttpMessageNotReadableException ex = new HttpMessageNotReadableException("JSON parse error", (Throwable) null, null);
 
-        ResponseEntity<ErrorResponseDto> response = handler.handleHttpMessageNotReadableException(ex, mockRequest);
+        ResponseEntity<ErrorResponseDto> response = handler.handleHttpMessageNotReadableException(ex);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -84,7 +84,7 @@ class ControllerExceptionHandlerTest {
         doReturn("id").when(ex).getName();
         doReturn("abc").when(ex).getValue();
 
-        ResponseEntity<ErrorResponseDto> response = handler.handleMethodArgumentTypeMismatchException(ex, mockRequest);
+        ResponseEntity<ErrorResponseDto> response = handler.handleMethodArgumentTypeMismatchException(ex);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody());

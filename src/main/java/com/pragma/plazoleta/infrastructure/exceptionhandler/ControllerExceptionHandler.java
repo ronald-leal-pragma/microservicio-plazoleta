@@ -22,7 +22,9 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class ControllerExceptionHandler {
 
-    /** 404 - Recurso no encontrado */
+    private static final String BAD_REQUEST = "Bad Request";
+    private static final String VALIDATION_ERROR = "VALIDATION_ERROR";
+
     @ExceptionHandler(NoDataFoundException.class)
     public ResponseEntity<ErrorResponseDto> handleNoDataFoundException(
             NoDataFoundException ex, HttpServletRequest request) {
@@ -30,7 +32,7 @@ public class ControllerExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(ErrorResponseDto.builder()
-                        .status(404)
+                        .status(HttpStatus.NOT_FOUND.value())
                         .error("Not Found")
                         .message(ex.getMessage() != null
                                 ? ex.getMessage()
@@ -40,22 +42,19 @@ public class ControllerExceptionHandler {
                         .build());
     }
 
-    /** 409 - El restaurante ya existe (NIT o nombre duplicado) */
     @ExceptionHandler(RestaurantAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponseDto> handleRestaurantAlreadyExistsException(
-            RestaurantAlreadyExistsException ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponseDto> handleRestaurantAlreadyExistsException() {
         log.warn("[EXCEPTION] 409 - Restaurante ya existe: NIT o nombre duplicado");
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(ErrorResponseDto.builder()
-                        .status(409)
+                        .status(HttpStatus.CONFLICT.value())
                         .error("Conflict")
                         .message(ExceptionResponse.RESTAURANT_ALREADY_EXISTS.getMessage())
                         .code("RESTAURANT_ALREADY_EXISTS")
                         .build());
     }
 
-    /** 400 - Reglas de negocio del dominio (edad, formato, etc.) */
     @ExceptionHandler(DomainException.class)
     public ResponseEntity<ErrorResponseDto> handleDomainException(
             DomainException ex, HttpServletRequest request) {
@@ -63,17 +62,16 @@ public class ControllerExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponseDto.builder()
-                        .status(400)
-                        .error("Bad Request")
+                        .status(HttpStatus.BAD_REQUEST.value())
+                        .error(BAD_REQUEST)
                         .message(ex.getMessage())
-                        .code("VALIDATION_ERROR")
+                        .code(VALIDATION_ERROR)
                         .build());
     }
 
-    /** 400 - Validaciones de campos (@Valid / @NotBlank / @Email / @Pattern) */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponseDto> handleMethodArgumentNotValidException(
-            MethodArgumentNotValidException ex, HttpServletRequest request) {
+            MethodArgumentNotValidException ex) {
         String combinedMessage = ex.getBindingResult().getAllErrors().stream()
                 .map(error -> {
                     String field = ((FieldError) error).getField();
@@ -84,53 +82,50 @@ public class ControllerExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponseDto.builder()
-                        .status(400)
-                        .error("Bad Request")
+                        .status(HttpStatus.BAD_REQUEST.value())
+                        .error(BAD_REQUEST)
                         .message("Validación fallida: " + combinedMessage)
-                        .code("VALIDATION_ERROR")
+                        .code(VALIDATION_ERROR)
                         .build());
     }
 
-    /** 400 - JSON malformado o campo con tipo incorrecto */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponseDto> handleHttpMessageNotReadableException(
-            HttpMessageNotReadableException ex, HttpServletRequest request) {
+            HttpMessageNotReadableException ex) {
         log.warn("[EXCEPTION] 400 - JSON malformado o ilegible: {}", ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponseDto.builder()
-                        .status(400)
-                        .error("Bad Request")
+                        .status(HttpStatus.BAD_REQUEST.value())
+                        .error(BAD_REQUEST)
                         .message("El cuerpo de la solicitud es inválido o está mal formado")
-                        .code("VALIDATION_ERROR")
+                        .code(VALIDATION_ERROR)
                         .build());
     }
 
-    /** 400 - Parámetro de tipo incorrecto en la URL */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponseDto> handleMethodArgumentTypeMismatchException(
-            MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+            MethodArgumentTypeMismatchException ex) {
         log.warn("[EXCEPTION] 400 - Tipo de parámetro inválido: nombre='{}', valor='{}'",
                 ex.getName(), ex.getValue());
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponseDto.builder()
-                        .status(400)
-                        .error("Bad Request")
+                        .status(HttpStatus.BAD_REQUEST.value())
+                        .error(BAD_REQUEST)
                         .message("El parámetro '" + ex.getName() + "' tiene un tipo de dato inválido")
-                        .code("VALIDATION_ERROR")
+                        .code(VALIDATION_ERROR)
                         .build());
     }
 
-    /** 403 - Sin permisos suficientes */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponseDto> handleAccessDeniedException(
-            AccessDeniedException ex, HttpServletRequest request) {
+            AccessDeniedException ex) {
         log.warn("[EXCEPTION] 403 - Acceso denegado: {}", ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ErrorResponseDto.builder()
-                        .status(403)
+                        .status(HttpStatus.FORBIDDEN.value())
                         .error("Forbidden")
                         .message("No tienes permisos suficientes para acceder a este recurso.")
                         .code("PERMISSION_DENIED")
@@ -138,7 +133,9 @@ public class ControllerExceptionHandler {
                         .build());
     }
 
-    /** 500 - Error genérico no controlado */
+    /**
+     * 500 - Error genérico no controlado
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDto> handleGenericException(
             Exception ex, HttpServletRequest request) {
@@ -146,7 +143,7 @@ public class ControllerExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ErrorResponseDto.builder()
-                        .status(500)
+                        .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                         .error("Internal Server Error")
                         .message("Ha ocurrido un error interno. Por favor intente más tarde")
                         .build());

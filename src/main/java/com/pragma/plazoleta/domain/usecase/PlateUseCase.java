@@ -7,47 +7,42 @@ import com.pragma.plazoleta.domain.model.PlateModel;
 import com.pragma.plazoleta.domain.model.RestaurantModel;
 import com.pragma.plazoleta.domain.spi.IPlatePersistencePort;
 import com.pragma.plazoleta.domain.spi.IRestaurantPersistencePort;
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
+
+@RequiredArgsConstructor
 public class PlateUseCase implements IPlateServicePort {
 
     private static final Logger log = LoggerFactory.getLogger(PlateUseCase.class);
-
+    private static final int MINIMUM_VALID_PRICE = 0;
     private final IPlatePersistencePort platePersistencePort;
     private final IRestaurantPersistencePort restaurantPersistencePort;
 
-    public PlateUseCase(IPlatePersistencePort platePersistencePort,
-                        IRestaurantPersistencePort restaurantPersistencePort) {
-        this.platePersistencePort = platePersistencePort;
-        this.restaurantPersistencePort = restaurantPersistencePort;
-    }
-
     @Override
     public PlateModel savePlate(PlateModel plateModel, Long idUsuarioPropietario) {
-        log.info("[USE CASE] Iniciando validaciones para crear plato: nombre={}, restaurante={}", 
+        log.info("[USE CASE] Iniciando validaciones para crear plato: nombre={}, restaurante={}",
                 plateModel.getNombre(), plateModel.getIdRestaurante());
 
-        // Validación 1: El precio debe ser un entero positivo mayor a 0
         validatePrice(plateModel.getPrecio());
-        
-        // Validación 2: Verificar que el restaurante existe
-        RestaurantModel restaurant = restaurantPersistencePort.findRestaurantById(plateModel.getIdRestaurante())
-                .orElseThrow(() -> {
-                    log.warn("[USE CASE] Restaurante no encontrado: id={}", plateModel.getIdRestaurante());
-                    return new DomainException(ExceptionConstants.RESTAURANT_NOT_FOUND_MESSAGE);
-                });
-        
-        // Validación 3: Verificar que el usuario es el propietario del restaurante
+        RestaurantModel restaurant = getRestaurantOrThrow(plateModel.getIdRestaurante());
         validateRestaurantOwner(idUsuarioPropietario, restaurant);
-        
-        // Establecer activa = true por defecto
+
+        if (platePersistencePort.existsPlateByNameAndRestaurantId(plateModel.getNombre(), plateModel.getIdRestaurante())) {
+            log.warn("[USE CASE] El plato ya existe en este restaurante: nombre={}", plateModel.getNombre());
+            throw new DomainException(ExceptionConstants.PLATE_ALREADY_EXISTS_MESSAGE);
+        }
+
         plateModel.setActiva(true);
         log.debug("[USE CASE] Plato configurado como activo por defecto");
 
         log.info("[USE CASE] Todas las validaciones OK, persistiendo plato");
         PlateModel saved = platePersistencePort.savePlate(plateModel);
         log.info("[USE CASE] Plato creado exitosamente: {}", plateModel.getNombre());
+
         return saved;
     }
 
@@ -55,57 +50,62 @@ public class PlateUseCase implements IPlateServicePort {
     public PlateModel updatePlate(Long idPlate, Integer precio, String descripcion, Long idUsuarioPropietario) {
         log.info("[USE CASE] Iniciando actualización de plato: id={}", idPlate);
 
-        // Validación 1: El precio debe ser un entero positivo mayor a 0
         validatePrice(precio);
-        
-        // Validación 2: Verificar que el plato existe
+
         PlateModel plate = platePersistencePort.findPlateById(idPlate)
                 .orElseThrow(() -> {
                     log.warn("[USE CASE] Plato no encontrado: id={}", idPlate);
-                    return new DomainException(ExceptionConstants.RESTAURANT_NOT_FOUND_MESSAGE);
+                    return new DomainException(ExceptionConstants.PLATE_NOT_FOUND_MESSAGE);
                 });
-        
-        // Validación 3: Verificar que el restaurante existe
-        RestaurantModel restaurant = restaurantPersistencePort.findRestaurantById(plate.getIdRestaurante())
-                .orElseThrow(() -> {
-                    log.warn("[USE CASE] Restaurante no encontrado: id={}", plate.getIdRestaurante());
-                    return new DomainException(ExceptionConstants.RESTAURANT_NOT_FOUND_MESSAGE);
-                });
-        
-        // Validación 4: Verificar que el usuario es el propietario del restaurante
+
+        RestaurantModel restaurant = getRestaurantOrThrow(plate.getIdRestaurante());
         validateRestaurantOwner(idUsuarioPropietario, restaurant);
-        
-        // Actualizar solo precio y descripción
+
         plate.setPrecio(precio);
         plate.setDescripcion(descripcion);
-        
-        log.info("[USE CASE] Actualizando plato en base de datos");
+
+        log.debug("[USE CASE] Mapeo de actualización listo, enviando a persistencia");
         PlateModel updated = platePersistencePort.updatePlate(plate);
+
         log.info("[USE CASE] Plato actualizado exitosamente: id={}", idPlate);
         return updated;
     }
 
     private void validatePrice(Integer precio) {
         log.debug("[USE CASE] Validando precio: {}", precio);
-        
-        if (precio == null || precio <= 0) {
-            log.warn("[USE CASE] Precio rechazado: debe ser mayor a 0");
-            throw new DomainException(ExceptionConstants.INVALID_PRICE_MESSAGE);
-        }
-        
+
+        Optional.ofNullable(precio)
+                .filter(p -> p > MINIMUM_VALID_PRICE)
+                .orElseThrow(() -> {
+                    log.warn("[USE CASE] Precio rechazado: debe ser mayor a {}", MINIMUM_VALID_PRICE);
+                    return new DomainException(ExceptionConstants.INVALID_PRICE_MESSAGE);
+                });
+
         log.debug("[USE CASE] Precio válido");
     }
 
     private void validateRestaurantOwner(Long idUsuarioPropietario, RestaurantModel restaurant) {
-        log.debug("[USE CASE] Validando propietario: usuario={}, propietarioRestaurante={}", 
+        log.debug("[USE CASE] Validando propietario: usuario={}, propietarioRestaurante={}",
                 idUsuarioPropietario, restaurant.getIdUsuarioPropietario());
-        
-        if (!restaurant.getIdUsuarioPropietario().equals(idUsuarioPropietario)) {
-            log.warn("[USE CASE] Usuario no es propietario del restaurante: usuario={}, propietario={}", 
-                    idUsuarioPropietario, restaurant.getIdUsuarioPropietario());
-            throw new DomainException(ExceptionConstants.USER_NOT_RESTAURANT_OWNER_MESSAGE);
-        }
-        
+
+        Optional.ofNullable(restaurant.getIdUsuarioPropietario())
+                .filter(ownerId -> ownerId.equals(idUsuarioPropietario))
+                .orElseThrow(() -> {
+                    log.warn("[USE CASE] Usuario no es propietario del restaurante: usuario={}, propietario={}",
+                            idUsuarioPropietario, restaurant.getIdUsuarioPropietario());
+                    return new DomainException(ExceptionConstants.USER_NOT_RESTAURANT_OWNER_MESSAGE);
+                });
+
         log.debug("[USE CASE] Usuario propietario validado correctamente");
+    }
+
+    private RestaurantModel getRestaurantOrThrow(Long idRestaurante) {
+        log.debug("[USE CASE] Buscando restaurante: id={}", idRestaurante);
+
+        return restaurantPersistencePort.findRestaurantById(idRestaurante)
+                .orElseThrow(() -> {
+                    log.warn("[USE CASE] Restaurante no encontrado: id={}", idRestaurante);
+                    return new DomainException(ExceptionConstants.RESTAURANT_NOT_FOUND_MESSAGE);
+                });
     }
 }
