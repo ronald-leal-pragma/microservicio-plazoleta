@@ -11,6 +11,8 @@ import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 
@@ -71,6 +73,28 @@ public class PlateUseCase implements IPlateServicePort {
         return updated;
     }
 
+    @Override
+    public PlateModel togglePlateStatus(Long idPlate, Boolean activa, Long idUsuarioPropietario) {
+        log.info("[USE CASE] Iniciando cambio de estado de plato: id={}, nuevoEstado={}", idPlate, activa);
+
+        PlateModel plate = platePersistencePort.findPlateById(idPlate)
+                .orElseThrow(() -> {
+                    log.warn("[USE CASE] Plato no encontrado: id={}", idPlate);
+                    return new DomainException(ExceptionConstants.PLATE_NOT_FOUND_MESSAGE);
+                });
+
+        RestaurantModel restaurant = getRestaurantOrThrow(plate.getIdRestaurante());
+        validateRestaurantOwner(idUsuarioPropietario, restaurant);
+
+        plate.setActiva(activa);
+
+        log.debug("[USE CASE] Actualizando estado del plato en persistencia");
+        PlateModel updated = platePersistencePort.updatePlate(plate);
+
+        log.info("[USE CASE] Estado del plato actualizado exitosamente: id={}, activa={}", idPlate, activa);
+        return updated;
+    }
+
     private void validatePrice(Integer precio) {
         log.debug("[USE CASE] Validando precio: {}", precio);
 
@@ -107,5 +131,21 @@ public class PlateUseCase implements IPlateServicePort {
                     log.warn("[USE CASE] Restaurante no encontrado: id={}", idRestaurante);
                     return new DomainException(ExceptionConstants.RESTAURANT_NOT_FOUND_MESSAGE);
                 });
+    }
+
+    @Override
+    public Page<PlateModel> listPlatesByRestaurant(Long restaurantId, String category, Pageable pageable) {
+        log.info("[USE CASE] Listando platos del restaurante: id={}, categoria={}, page={}, size={}",
+                restaurantId, category, pageable.getPageNumber(), pageable.getPageSize());
+
+        // Validar que el restaurante existe
+        getRestaurantOrThrow(restaurantId);
+
+        if (category != null && !category.isBlank()) {
+            log.debug("[USE CASE] Filtrando por categoría: {}", category);
+            return platePersistencePort.findPlatesByRestaurantIdAndCategory(restaurantId, category, pageable);
+        }
+
+        return platePersistencePort.findPlatesByRestaurantId(restaurantId, pageable);
     }
 }

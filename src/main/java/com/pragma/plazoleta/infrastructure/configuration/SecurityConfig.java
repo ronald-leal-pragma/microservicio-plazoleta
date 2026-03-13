@@ -38,9 +38,18 @@ public class SecurityConfig {
                 .antMatchers(HttpMethod.POST, "/user/").hasRole("ADMINISTRADOR")
                 // Crear restaurante: solo ADMINISTRADOR
                 .antMatchers(HttpMethod.POST, "/restaurant/").hasRole("ADMINISTRADOR")
+                // Listar restaurantes: solo CLIENTE
+                .antMatchers(HttpMethod.GET, "/restaurant/").hasRole("CLIENTE")
+                // Listar platos de un restaurante: solo CLIENTE
+                .antMatchers(HttpMethod.GET, "/plate/restaurant/**").hasRole("CLIENTE")
                 // Crear y modificar platos: solo PROPIETARIO
                 .antMatchers(HttpMethod.POST, "/plate/").hasRole("PROPIETARIO")
                 .antMatchers(HttpMethod.PUT, "/plate/**").hasRole("PROPIETARIO")
+                .antMatchers(HttpMethod.PATCH, "/plate/**/status").hasRole("PROPIETARIO")
+                // Crear empleado: solo PROPIETARIO
+                .antMatchers(HttpMethod.POST, "/employee/").hasRole("PROPIETARIO")
+                // Crear pedido: solo CLIENTE
+                .antMatchers(HttpMethod.POST, "/order/").hasRole("CLIENTE")
                 // Cualquier otra petición requiere autenticación
                 .anyRequest().authenticated();
 

@@ -7,6 +7,8 @@ import com.pragma.plazoleta.infrastructure.out.jpa.mapper.IRestaurantEntityMappe
 import com.pragma.plazoleta.infrastructure.out.jpa.repository.IRestaurantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 
@@ -47,6 +49,20 @@ public class RestaurantJpaAdapter implements IRestaurantPersistencePort {
     public Optional<RestaurantModel> findRestaurantById(Long id) {
         log.debug("[JPA ADAPTER] Buscando restaurante con id={}", id);
         return restaurantRepository.findById(id)
+                .map(restaurantEntityMapper::toModel);
+    }
+
+    @Override
+    public boolean existsRestaurantByOwnerId(Long ownerId) {
+        log.debug("[JPA ADAPTER] Consultando existencia de restaurante para propietario id={}", ownerId);
+        return restaurantRepository.existsByIdUsuarioPropietario(ownerId);
+    }
+
+    @Override
+    public Page<RestaurantModel> findAllRestaurantsOrderByName(Pageable pageable) {
+        log.debug("[JPA ADAPTER] Consultando restaurantes paginados: page={}, size={}", 
+                pageable.getPageNumber(), pageable.getPageSize());
+        return restaurantRepository.findAllByOrderByNombreAsc(pageable)
                 .map(restaurantEntityMapper::toModel);
     }
 }

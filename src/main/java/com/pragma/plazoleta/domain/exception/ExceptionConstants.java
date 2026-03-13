@@ -22,4 +22,16 @@ public class ExceptionConstants {
     public static final String USER_NOT_RESTAURANT_OWNER_MESSAGE = "El usuario no es el propietario del restaurante";
     public static final String PLATE_ALREADY_EXISTS_MESSAGE = "El plato ya existe";
     public static final String PLATE_NOT_FOUND_MESSAGE = "El plato no existe";
+
+    public static final String ROL_EMPLEADO = "EMPLEADO";
+    public static final Long ROL_EMPLEADO_ID = 3L;
+
+    // Employee validation messages
+    public static final String OWNER_WITHOUT_RESTAURANT_MESSAGE = "El propietario no tiene un restaurante asociado";
+
+    // Order validation messages
+    public static final String CLIENT_HAS_ACTIVE_ORDER_MESSAGE = "El cliente ya tiene un pedido en proceso";
+    public static final String PLATE_NOT_BELONGS_TO_RESTAURANT_MESSAGE = "El plato no pertenece al restaurante indicado";
+    public static final String PLATE_NOT_ACTIVE_MESSAGE = "El plato no está disponible";
+    public static final String ORDER_NOT_FOUND_MESSAGE = "El pedido no existe";
 }

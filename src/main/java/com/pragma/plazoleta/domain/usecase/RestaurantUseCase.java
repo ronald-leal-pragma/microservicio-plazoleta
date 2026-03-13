@@ -11,6 +11,8 @@ import com.pragma.plazoleta.domain.spi.IUserPersistencePort;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -126,4 +128,10 @@ public class RestaurantUseCase implements IRestaurantServicePort {
         log.debug("[USE CASE] Usuario propietario validado correctamente");
     }
 
+    @Override
+    public Page<RestaurantModel> listRestaurants(Pageable pageable) {
+        log.info("[USE CASE] Listando restaurantes: page={}, size={}", 
+                pageable.getPageNumber(), pageable.getPageSize());
+        return restaurantPersistencePort.findAllRestaurantsOrderByName(pageable);
+    }
 }

@@ -15,6 +15,7 @@ public class PlateResponseDto {
     private String nombre;
     private Integer precio;
     private String descripcion;
+    private Boolean activa;
     @JsonProperty("creadoEn")
     private String creadoEn;
 }

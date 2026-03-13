@@ -2,6 +2,8 @@ package com.pragma.plazoleta.infrastructure.input.rest;
 
 import com.pragma.plazoleta.application.dto.request.PlateRequestDto;
 import com.pragma.plazoleta.application.dto.request.PlateUpdateRequestDto;
+import com.pragma.plazoleta.application.dto.response.PaginatedResponseDto;
+import com.pragma.plazoleta.application.dto.response.PlateListResponseDto;
 import com.pragma.plazoleta.application.dto.response.PlateResponseDto;
 import com.pragma.plazoleta.application.handler.IPlateHandler;
 import io.swagger.v3.oas.annotations.Operation;
@@ -64,6 +66,48 @@ public class PlateRestController {
         PlateResponseDto updated = plateHandler.updatePlate(idPlate, plateUpdateRequestDto);
         log.info("[REST] Plato actualizado exitosamente: id={}", idPlate);
         return ResponseEntity.ok(updated);
+    }
+
+    @Operation(summary = "Habilitar/Deshabilitar plato",
+               description = "Cambia el estado activo de un plato. Solo el propietario del restaurante puede modificar el estado.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Estado del plato actualizado exitosamente",
+                         content = @Content(schema = @Schema(implementation = PlateResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "El usuario no es propietario del restaurante",
+                         content = @Content),
+            @ApiResponse(responseCode = "404", description = "Plato no encontrado",
+                         content = @Content)
+    })
+    @PatchMapping("/{idPlate}/status")
+    public ResponseEntity<PlateResponseDto> togglePlateStatus(
+            @PathVariable Long idPlate,
+            @RequestParam Boolean activa) {
+        log.info("[REST] PATCH /plate/{}/status - Solicitud para cambiar estado: activa={}", idPlate, activa);
+        PlateResponseDto updated = plateHandler.togglePlateStatus(idPlate, activa);
+        log.info("[REST] Estado del plato actualizado exitosamente: id={}, activa={}", idPlate, activa);
+        return ResponseEntity.ok(updated);
+    }
+
+    @Operation(summary = "Listar platos de un restaurante",
+               description = "Lista los platos activos de un restaurante, paginados y con filtro opcional por categoría. Accesible por clientes.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de platos obtenida exitosamente",
+                         content = @Content(schema = @Schema(implementation = PaginatedResponseDto.class))),
+            @ApiResponse(responseCode = "404", description = "Restaurante no encontrado", content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autorizado", content = @Content)
+    })
+    @GetMapping("/restaurant/{restaurantId}")
+    public ResponseEntity<PaginatedResponseDto<PlateListResponseDto>> listPlatesByRestaurant(
+            @PathVariable Long restaurantId,
+            @RequestParam(required = false) String category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        log.info("[REST] GET /plate/restaurant/{} - Listar platos: categoria={}, page={}, size={}",
+                restaurantId, category, page, size);
+        PaginatedResponseDto<PlateListResponseDto> response = plateHandler.listPlatesByRestaurant(
+                restaurantId, category, page, size);
+        log.info("[REST] Platos listados exitosamente: {} elementos", response.getContent().size());
+        return ResponseEntity.ok(response);
     }
 }
 

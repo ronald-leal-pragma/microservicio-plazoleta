@@ -1,0 +1,398 @@
+{
+  "info": {
+    "name": "Plazoleta - Colección Completa",
+    "description": "Colección completa de endpoints para el microservicio Plazoleta y Usuarios",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "plazoleta_url",
+      "value": "http://localhost:8081",
+      "type": "string"
+    },
+    {
+      "key": "usuarios_url",
+      "value": "http://localhost:8082",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "propietario_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "cliente_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Autenticación",
+      "item": [
+        {
+          "name": "Login Admin",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"admin@pragma.com\",\n  \"clave\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{usuarios_url}}/auth/login",
+              "host": ["{{usuarios_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login Propietario",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"carlos.propietario@example.com\",\n  \"clave\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{usuarios_url}}/auth/login",
+              "host": ["{{usuarios_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login Cliente",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"maria.cliente@email.com\",\n  \"clave\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{usuarios_url}}/auth/login",
+              "host": ["{{usuarios_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Usuarios (microservicio-usuarios)",
+      "item": [
+        {
+          "name": "Crear Propietario (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{admin_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Carlos\",\n  \"apellido\": \"Rodríguez\",\n  \"documentoDeIdentidad\": \"1234567890\",\n  \"celular\": \"+573001234567\",\n  \"fechaNacimiento\": \"1990-05-15\",\n  \"correo\": \"carlos.propietario@example.com\",\n  \"clave\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{usuarios_url}}/user/",
+              "host": ["{{usuarios_url}}"],
+              "path": ["user", ""]
+            },
+            "description": "Crea un propietario. Requiere rol ADMINISTRADOR."
+          }
+        },
+        {
+          "name": "Crear Cliente (Público)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"María\",\n  \"apellido\": \"García\",\n  \"documentoDeIdentidad\": \"9876543210\",\n  \"celular\": \"+573009876543\",\n  \"correo\": \"maria.cliente@email.com\",\n  \"clave\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{usuarios_url}}/user/client/",
+              "host": ["{{usuarios_url}}"],
+              "path": ["user", "client", ""]
+            },
+            "description": "Auto-registro de cliente. No requiere autenticación."
+          }
+        },
+        {
+          "name": "Obtener Usuario por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{usuarios_url}}/user/2",
+              "host": ["{{usuarios_url}}"],
+              "path": ["user", "2"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Restaurantes (Admin)",
+      "item": [
+        {
+          "name": "Crear Restaurante",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{admin_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Burger King\",\n  \"nit\": \"900123456\",\n  \"direccion\": \"Calle 100 #15-20\",\n  \"telefono\": \"+573001112233\",\n  \"urlLogo\": \"https://example.com/logo-burger.png\",\n  \"idUsuarioPropietario\": 2\n}"
+            },
+            "url": {
+              "raw": "{{plazoleta_url}}/restaurant/",
+              "host": ["{{plazoleta_url}}"],
+              "path": ["restaurant", ""]
+            },
+            "description": "Crea un restaurante. Requiere rol ADMINISTRADOR."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Platos (Propietario)",
+      "item": [
+        {
+          "name": "Crear Plato",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{propietario_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Hamburguesa Clásica\",\n  \"precio\": 15000,\n  \"descripcion\": \"Hamburguesa con carne 100% res, lechuga, tomate y salsa especial\",\n  \"urlImagen\": \"https://example.com/hamburguesa.jpg\",\n  \"categoria\": \"PRINCIPALES\",\n  \"idRestaurante\": 1\n}"
+            },
+            "url": {
+              "raw": "{{plazoleta_url}}/plate/",
+              "host": ["{{plazoleta_url}}"],
+              "path": ["plate", ""]
+            },
+            "description": "Crea un plato. Requiere rol PROPIETARIO y ser dueño del restaurante."
+          }
+        },
+        {
+          "name": "Actualizar Plato",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{propietario_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"precio\": 18000,\n  \"descripcion\": \"Hamburguesa premium con carne angus, queso cheddar y bacon\"\n}"
+            },
+            "url": {
+              "raw": "{{plazoleta_url}}/plate/1",
+              "host": ["{{plazoleta_url}}"],
+              "path": ["plate", "1"]
+            },
+            "description": "Actualiza precio y descripción de un plato."
+          }
+        },
+        {
+          "name": "Deshabilitar Plato",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{propietario_token}}"}
+            ],
+            "url": {
+              "raw": "{{plazoleta_url}}/plate/1/status?activa=false",
+              "host": ["{{plazoleta_url}}"],
+              "path": ["plate", "1", "status"],
+              "query": [{"key": "activa", "value": "false"}]
+            },
+            "description": "Deshabilita un plato del menú."
+          }
+        },
+        {
+          "name": "Habilitar Plato",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{propietario_token}}"}
+            ],
+            "url": {
+              "raw": "{{plazoleta_url}}/plate/1/status?activa=true",
+              "host": ["{{plazoleta_url}}"],
+              "path": ["plate", "1", "status"],
+              "query": [{"key": "activa", "value": "true"}]
+            },
+            "description": "Habilita un plato en el menú."
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Empleados (Propietario)",
+      "item": [
+        {
+          "name": "Crear Empleado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{propietario_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Juan\",\n  \"apellido\": \"Pérez\",\n  \"documentoDeIdentidad\": \"1122334455\",\n  \"celular\": \"+573005556677\",\n  \"correo\": \"juan.empleado@email.com\",\n  \"idRol\": 4,\n  \"clave\": \"empleado123\"\n}"
+            },
+            "url": {
+              "raw": "{{plazoleta_url}}/employee/",
+              "host": ["{{plazoleta_url}}"],
+              "path": ["employee", ""]
+            },
+            "description": "Crea un empleado. Requiere rol PROPIETARIO."
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Cliente - Consultas",
+      "item": [
+        {
+          "name": "Listar Restaurantes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{cliente_token}}"}
+            ],
+            "url": {
+              "raw": "{{plazoleta_url}}/restaurant/?page=0&size=10",
+              "host": ["{{plazoleta_url}}"],
+              "path": ["restaurant", ""],
+              "query": [
+                {"key": "page", "value": "0"},
+                {"key": "size", "value": "10"}
+              ]
+            },
+            "description": "Lista restaurantes ordenados alfabéticamente. Requiere rol CLIENTE."
+          }
+        },
+        {
+          "name": "Listar Platos de Restaurante",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{cliente_token}}"}
+            ],
+            "url": {
+              "raw": "{{plazoleta_url}}/plate/restaurant/1?page=0&size=10",
+              "host": ["{{plazoleta_url}}"],
+              "path": ["plate", "restaurant", "1"],
+              "query": [
+                {"key": "page", "value": "0"},
+                {"key": "size", "value": "10"}
+              ]
+            },
+            "description": "Lista platos activos de un restaurante. Requiere rol CLIENTE."
+          }
+        },
+        {
+          "name": "Listar Platos por Categoría",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{cliente_token}}"}
+            ],
+            "url": {
+              "raw": "{{plazoleta_url}}/plate/restaurant/1?category=PRINCIPALES&page=0&size=10",
+              "host": ["{{plazoleta_url}}"],
+              "path": ["plate", "restaurant", "1"],
+              "query": [
+                {"key": "category", "value": "PRINCIPALES"},
+                {"key": "page", "value": "0"},
+                {"key": "size", "value": "10"}
+              ]
+            },
+            "description": "Lista platos filtrados por categoría."
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Pedidos (Cliente)",
+      "item": [
+        {
+          "name": "Crear Pedido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{cliente_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idRestaurante\": 1,\n  \"items\": [\n    {\n      \"idPlato\": 1,\n      \"cantidad\": 2\n    },\n    {\n      \"idPlato\": 2,\n      \"cantidad\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{plazoleta_url}}/order/",
+              "host": ["{{plazoleta_url}}"],
+              "path": ["order", ""]
+            },
+            "description": "Crea un pedido. Requiere rol CLIENTE y no tener pedidos activos."
+          }
+        },
+        {
+          "name": "Crear Pedido - Error: Pedido Activo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{cliente_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idRestaurante\": 1,\n  \"items\": [\n    {\n      \"idPlato\": 1,\n      \"cantidad\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{plazoleta_url}}/order/",
+              "host": ["{{plazoleta_url}}"],
+              "path": ["order", ""]
+            },
+            "description": "Prueba de error cuando el cliente ya tiene un pedido activo."
+          }
+        },
+        {
+          "name": "Crear Pedido - Error: Plato de Otro Restaurante",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{cliente_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idRestaurante\": 1,\n  \"items\": [\n    {\n      \"idPlato\": 99,\n      \"cantidad\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{plazoleta_url}}/order/",
+              "host": ["{{plazoleta_url}}"],
+              "path": ["order", ""]
+            },
+            "description": "Prueba de error cuando un plato no pertenece al restaurante."
+          }
+        }
+      ]
+    }
+  ]
+}

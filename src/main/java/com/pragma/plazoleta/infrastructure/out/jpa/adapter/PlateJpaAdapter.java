@@ -8,6 +8,8 @@ import com.pragma.plazoleta.infrastructure.out.jpa.mapper.IPlateEntityMapper;
 import com.pragma.plazoleta.infrastructure.out.jpa.repository.IPlateRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 
@@ -55,5 +57,21 @@ public class PlateJpaAdapter implements IPlatePersistencePort {
         log.info("[JPA ADAPTER] Plato actualizado exitosamente: id={}, precio={}",
                 plateModel.getId(), plateModel.getPrecio());
         return plateEntityMapper.toModel(saved);
+    }
+
+    @Override
+    public Page<PlateModel> findPlatesByRestaurantId(Long restaurantId, Pageable pageable) {
+        log.debug("[JPA ADAPTER] Buscando platos del restaurante: id={}, page={}, size={}",
+                restaurantId, pageable.getPageNumber(), pageable.getPageSize());
+        return plateRepository.findByIdRestauranteAndActivaTrue(restaurantId, pageable)
+                .map(plateEntityMapper::toModel);
+    }
+
+    @Override
+    public Page<PlateModel> findPlatesByRestaurantIdAndCategory(Long restaurantId, String category, Pageable pageable) {
+        log.debug("[JPA ADAPTER] Buscando platos del restaurante por categoría: id={}, categoria={}, page={}, size={}",
+                restaurantId, category, pageable.getPageNumber(), pageable.getPageSize());
+        return plateRepository.findByIdRestauranteAndCategoriaAndActivaTrue(restaurantId, category, pageable)
+                .map(plateEntityMapper::toModel);
     }
 }

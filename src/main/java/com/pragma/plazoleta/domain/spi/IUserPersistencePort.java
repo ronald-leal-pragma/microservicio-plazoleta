@@ -6,4 +6,5 @@ import java.util.Optional;
 
 public interface IUserPersistencePort {
     Optional<UserModel> findUserById(Long id);
+    UserModel saveUser(UserModel userModel);
 }

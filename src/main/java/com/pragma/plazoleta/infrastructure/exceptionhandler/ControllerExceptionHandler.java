@@ -3,6 +3,7 @@ package com.pragma.plazoleta.infrastructure.exceptionhandler;
 import com.pragma.plazoleta.domain.exception.DomainException;
 import com.pragma.plazoleta.infrastructure.exception.NoDataFoundException;
 import com.pragma.plazoleta.infrastructure.exception.RestaurantAlreadyExistsException;
+import com.pragma.plazoleta.infrastructure.exception.UserServiceException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -130,6 +131,29 @@ public class ControllerExceptionHandler {
                         .message("No tienes permisos suficientes para acceder a este recurso.")
                         .code("PERMISSION_DENIED")
                         .details("El recurso solicitado requiere permisos adicionales.")
+                        .build());
+    }
+
+    /**
+     * Error del servicio de usuarios (integración HTTP)
+     */
+    @ExceptionHandler(UserServiceException.class)
+    public ResponseEntity<ErrorResponseDto> handleUserServiceException(
+            UserServiceException ex) {
+        log.warn("[EXCEPTION] {} - Error del servicio de usuarios: {}", ex.getStatusCode(), ex.getMessage());
+        
+        HttpStatus status = HttpStatus.resolve(ex.getStatusCode());
+        if (status == null) {
+            status = HttpStatus.BAD_REQUEST;
+        }
+        
+        return ResponseEntity
+                .status(status)
+                .body(ErrorResponseDto.builder()
+                        .status(status.value())
+                        .error(status.getReasonPhrase())
+                        .message(ex.getMessage())
+                        .code(ex.getErrorCode())
                         .build());
     }
 
