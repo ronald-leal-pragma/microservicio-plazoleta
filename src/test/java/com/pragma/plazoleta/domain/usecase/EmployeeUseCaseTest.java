@@ -73,7 +73,7 @@ class EmployeeUseCaseTest {
         when(restaurantPersistencePort.existsRestaurantByOwnerId(OWNER_ID)).thenReturn(true);
         when(userPersistencePort.saveUser(any())).thenReturn(savedEmployee);
 
-        UserModel result = employeeUseCase.createEmployee(employeeModel, OWNER_ID);
+        UserModel result = employeeUseCase.createEmployee(employeeModel, OWNER_ID,1L);
 
         assertNotNull(result);
         assertEquals(50L, result.getId());
@@ -90,7 +90,7 @@ class EmployeeUseCaseTest {
         when(restaurantPersistencePort.existsRestaurantByOwnerId(OWNER_ID)).thenReturn(true);
         when(userPersistencePort.saveUser(any())).thenReturn(saved);
 
-        employeeUseCase.createEmployee(employeeModel, OWNER_ID);
+        employeeUseCase.createEmployee(employeeModel, OWNER_ID,1L);
 
         assertEquals(ExceptionConstants.ROL_EMPLEADO, employeeModel.getRol().getNombre());
         assertEquals(ExceptionConstants.ROL_EMPLEADO_ID, employeeModel.getRol().getId());
@@ -103,7 +103,7 @@ class EmployeeUseCaseTest {
         when(userPersistencePort.findUserById(OWNER_ID)).thenReturn(Optional.empty());
 
         DomainException ex = assertThrows(DomainException.class,
-                () -> employeeUseCase.createEmployee(employeeModel, OWNER_ID));
+                () -> employeeUseCase.createEmployee(employeeModel, OWNER_ID,1L));
 
         assertEquals(ExceptionConstants.USER_NOT_FOUND_MESSAGE, ex.getMessage());
         verify(userPersistencePort, never()).saveUser(any());
@@ -116,7 +116,7 @@ class EmployeeUseCaseTest {
         when(userPersistencePort.findUserById(OWNER_ID)).thenReturn(Optional.of(ownerUser));
 
         DomainException ex = assertThrows(DomainException.class,
-                () -> employeeUseCase.createEmployee(employeeModel, OWNER_ID));
+                () -> employeeUseCase.createEmployee(employeeModel, OWNER_ID,1L));
 
         assertEquals(ExceptionConstants.USER_NOT_OWNER_MESSAGE, ex.getMessage());
         verify(userPersistencePort, never()).saveUser(any());
@@ -129,7 +129,7 @@ class EmployeeUseCaseTest {
         when(userPersistencePort.findUserById(OWNER_ID)).thenReturn(Optional.of(ownerUser));
 
         DomainException ex = assertThrows(DomainException.class,
-                () -> employeeUseCase.createEmployee(employeeModel, OWNER_ID));
+                () -> employeeUseCase.createEmployee(employeeModel, OWNER_ID,1L));
 
         assertEquals(ExceptionConstants.USER_NOT_OWNER_MESSAGE, ex.getMessage());
     }
@@ -141,7 +141,7 @@ class EmployeeUseCaseTest {
         when(restaurantPersistencePort.existsRestaurantByOwnerId(OWNER_ID)).thenReturn(false);
 
         DomainException ex = assertThrows(DomainException.class,
-                () -> employeeUseCase.createEmployee(employeeModel, OWNER_ID));
+                () -> employeeUseCase.createEmployee(employeeModel, OWNER_ID,1L));
 
         assertEquals(ExceptionConstants.OWNER_WITHOUT_RESTAURANT_MESSAGE, ex.getMessage());
         verify(userPersistencePort, never()).saveUser(any());

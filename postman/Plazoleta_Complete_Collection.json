@@ -29,6 +29,11 @@
       "key": "cliente_token",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "empleado_token",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -75,6 +80,22 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"correo\": \"maria.cliente@email.com\",\n  \"clave\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{usuarios_url}}/auth/login",
+              "host": ["{{usuarios_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login Empleado",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"juan.empleado@email.com\",\n  \"clave\": \"empleado123\"\n}"
             },
             "url": {
               "raw": "{{usuarios_url}}/auth/login",
@@ -152,14 +173,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Burger King\",\n  \"nit\": \"900123456\",\n  \"direccion\": \"Calle 100 #15-20\",\n  \"telefono\": \"+573001112233\",\n  \"urlLogo\": \"https://example.com/logo-burger.png\",\n  \"idUsuarioPropietario\": 2\n}"
+              "raw": "{\n  \"nombre\": \"Burger King\",\n  \"nit\": \"900123456\",\n  \"direccion\": \"Calle 100 #15-20\",\n  \"telefono\": \"+573001112233\",\n  \"urlLogo\": \"https://example.com/logo-burger.png\",\n  \"correoPropietario\": \"carlos.propietario@example.com\"\n}"
             },
             "url": {
               "raw": "{{plazoleta_url}}/restaurant/",
               "host": ["{{plazoleta_url}}"],
               "path": ["restaurant", ""]
             },
-            "description": "Crea un restaurante. Requiere rol ADMINISTRADOR."
+            "description": "Crea un restaurante usando el correo del propietario. Requiere rol ADMINISTRADOR."
           }
         }
       ]
@@ -254,14 +275,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Juan\",\n  \"apellido\": \"Pérez\",\n  \"documentoDeIdentidad\": \"1122334455\",\n  \"celular\": \"+573005556677\",\n  \"correo\": \"juan.empleado@email.com\",\n  \"idRol\": 4,\n  \"clave\": \"empleado123\"\n}"
+              "raw": "{\n  \"nombre\": \"Juan\",\n  \"apellido\": \"Pérez\",\n  \"documentoDeIdentidad\": \"1122334455\",\n  \"celular\": \"+573005556677\",\n  \"correo\": \"juan.empleado@email.com\",\n  \"idRol\": 4,\n  \"clave\": \"empleado123\",\n  \"idRestaurante\": 1\n}"
             },
             "url": {
               "raw": "{{plazoleta_url}}/employee/",
               "host": ["{{plazoleta_url}}"],
               "path": ["employee", ""]
             },
-            "description": "Crea un empleado. Requiere rol PROPIETARIO."
+            "description": "Crea un empleado y lo asocia a un restaurante. Requiere rol PROPIETARIO."
           }
         }
       ]
@@ -390,6 +411,91 @@
               "path": ["order", ""]
             },
             "description": "Prueba de error cuando un plato no pertenece al restaurante."
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Empleado - Pedidos",
+      "item": [
+        {
+          "name": "Listar Pedidos PENDIENTES",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{empleado_token}}"}
+            ],
+            "url": {
+              "raw": "{{plazoleta_url}}/order/?status=PENDIENTE&page=0&size=10",
+              "host": ["{{plazoleta_url}}"],
+              "path": ["order", ""],
+              "query": [
+                {"key": "status", "value": "PENDIENTE"},
+                {"key": "page", "value": "0"},
+                {"key": "size", "value": "10"}
+              ]
+            },
+            "description": "Lista pedidos pendientes del restaurante del empleado."
+          }
+        },
+        {
+          "name": "Listar Pedidos EN_PREPARACION",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{empleado_token}}"}
+            ],
+            "url": {
+              "raw": "{{plazoleta_url}}/order/?status=EN_PREPARACION&page=0&size=10",
+              "host": ["{{plazoleta_url}}"],
+              "path": ["order", ""],
+              "query": [
+                {"key": "status", "value": "EN_PREPARACION"},
+                {"key": "page", "value": "0"},
+                {"key": "size", "value": "10"}
+              ]
+            },
+            "description": "Lista pedidos en preparación del restaurante del empleado."
+          }
+        },
+        {
+          "name": "Listar Pedidos LISTO",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{empleado_token}}"}
+            ],
+            "url": {
+              "raw": "{{plazoleta_url}}/order/?status=LISTO&page=0&size=10",
+              "host": ["{{plazoleta_url}}"],
+              "path": ["order", ""],
+              "query": [
+                {"key": "status", "value": "LISTO"},
+                {"key": "page", "value": "0"},
+                {"key": "size", "value": "10"}
+              ]
+            },
+            "description": "Lista pedidos listos del restaurante del empleado."
+          }
+        },
+        {
+          "name": "Listar Pedidos ENTREGADO",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{empleado_token}}"}
+            ],
+            "url": {
+              "raw": "{{plazoleta_url}}/order/?status=ENTREGADO&page=0&size=10",
+              "host": ["{{plazoleta_url}}"],
+              "path": ["order", ""],
+              "query": [
+                {"key": "status", "value": "ENTREGADO"},
+                {"key": "page", "value": "0"},
+                {"key": "size", "value": "10"}
+              ]
+            },
+            "description": "Lista pedidos entregados del restaurante del empleado."
           }
         }
       ]

@@ -91,7 +91,7 @@ class EmployeeHandlerTest {
     @DisplayName("Debe retornar EmployeeResponseDto cuando el empleado es creado")
     void createEmployee_shouldReturnResponseDtoWhenCreated() {
         when(employeeRequestMapper.toUser(requestDto)).thenReturn(employeeModel);
-        when(employeeServicePort.createEmployee(employeeModel, OWNER_ID)).thenReturn(createdEmployee);
+        when(employeeServicePort.createEmployee(employeeModel, OWNER_ID,1L)).thenReturn(createdEmployee);
 
         EmployeeResponseDto result = employeeHandler.createEmployee(requestDto);
 
@@ -108,7 +108,7 @@ class EmployeeHandlerTest {
     void createEmployee_shouldReturnNullRolWhenEmployeeHasNoRole() {
         createdEmployee.setRol(null);
         when(employeeRequestMapper.toUser(requestDto)).thenReturn(employeeModel);
-        when(employeeServicePort.createEmployee(employeeModel, OWNER_ID)).thenReturn(createdEmployee);
+        when(employeeServicePort.createEmployee(employeeModel, OWNER_ID,1L)).thenReturn(createdEmployee);
 
         EmployeeResponseDto result = employeeHandler.createEmployee(requestDto);
 
@@ -120,18 +120,18 @@ class EmployeeHandlerTest {
     @DisplayName("Debe llamar al servicio con el ID del propietario autenticado")
     void createEmployee_shouldCallServiceWithAuthenticatedOwnerId() {
         when(employeeRequestMapper.toUser(requestDto)).thenReturn(employeeModel);
-        when(employeeServicePort.createEmployee(any(), eq(OWNER_ID))).thenReturn(createdEmployee);
+        when(employeeServicePort.createEmployee(any(), eq(OWNER_ID),1L)).thenReturn(createdEmployee);
 
         employeeHandler.createEmployee(requestDto);
 
-        verify(employeeServicePort).createEmployee(employeeModel, OWNER_ID);
+        verify(employeeServicePort).createEmployee(employeeModel, OWNER_ID,1L);
     }
 
     @Test
     @DisplayName("Debe llamar al mapper para convertir el requestDto en modelo")
     void createEmployee_shouldCallMapper() {
         when(employeeRequestMapper.toUser(requestDto)).thenReturn(employeeModel);
-        when(employeeServicePort.createEmployee(any(), any())).thenReturn(createdEmployee);
+        when(employeeServicePort.createEmployee(any(), any(),1L)).thenReturn(createdEmployee);
 
         employeeHandler.createEmployee(requestDto);
 

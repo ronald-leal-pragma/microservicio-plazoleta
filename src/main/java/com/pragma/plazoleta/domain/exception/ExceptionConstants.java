@@ -28,6 +28,8 @@ public class ExceptionConstants {
 
     // Employee validation messages
     public static final String OWNER_WITHOUT_RESTAURANT_MESSAGE = "El propietario no tiene un restaurante asociado";
+    public static final String RESTAURANT_NOT_BELONGS_TO_OWNER_MESSAGE = "El restaurante no pertenece al propietario";
+    public static final String EMPLOYEE_NOT_BELONGS_TO_RESTAURANT_MESSAGE = "El empleado no pertenece al restaurante";
 
     // Order validation messages
     public static final String CLIENT_HAS_ACTIVE_ORDER_MESSAGE = "El cliente ya tiene un pedido en proceso";

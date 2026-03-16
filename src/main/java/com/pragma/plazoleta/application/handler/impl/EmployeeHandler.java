@@ -27,19 +27,16 @@ public class EmployeeHandler implements IEmployeeHandler {
     public EmployeeResponseDto createEmployee(EmployeeRequestDto employeeRequestDto) {
         log.info("[HANDLER] Iniciando petición para crear empleado");
 
-        // 1. Extraer el ID del propietario desde el contexto de seguridad (JWT)
         Long ownerId = getAuthenticatedUserId();
         log.debug("[HANDLER] ID del propietario autenticado extraído: {}", ownerId);
 
-        // 2. Mapear el Request DTO al Modelo de Dominio
         UserModel employeeModel = employeeRequestMapper.toUser(employeeRequestDto);
 
-        // 3. Ejecutar el Caso de Uso pasando el modelo y el ID del creador
-        UserModel createdEmployee = employeeServicePort.createEmployee(employeeModel, ownerId);
+        UserModel createdEmployee = employeeServicePort.createEmployee(
+                employeeModel, ownerId, employeeRequestDto.getIdRestaurante());
 
         log.info("[HANDLER] Empleado creado exitosamente, mapeando respuesta");
 
-        // 4. Retornar la respuesta usando el patrón Builder (como hemos venido haciendo)
         return EmployeeResponseDto.builder()
                 .id(createdEmployee.getId())
                 .nombre(createdEmployee.getNombre())

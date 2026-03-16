@@ -43,6 +43,25 @@ public class UserHttpAdapter implements IUserPersistencePort {
         }
     }
 
+    @Override
+    public Optional<UserModel> findUserByEmail(String email) {
+        String url = String.format("%s/user/email/%s", usuariosServiceUrl, email);
+        log.debug("[HTTP ADAPTER] Consultando usuario email={} en {}", email, url);
+
+        try {
+            return Optional.of(restTemplate.getForEntity(url, UserResponseDto.class))
+                    .filter(response -> response.getStatusCode().is2xxSuccessful())
+                    .map(ResponseEntity::getBody)
+                    .map(this::mapToModel);
+        } catch (HttpClientErrorException.NotFound e) {
+            log.warn("[HTTP ADAPTER] Usuario no encontrado: email={}", email);
+            return Optional.empty();
+        } catch (Exception e) {
+            log.error("[HTTP ADAPTER] Error inesperado consultando usuario por email: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
+
 
     @Override
     public UserModel saveUser(UserModel userModel) {

@@ -10,6 +10,8 @@ import com.pragma.plazoleta.infrastructure.out.jpa.mapper.IOrderEntityMapper;
 import com.pragma.plazoleta.infrastructure.out.jpa.repository.IOrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -49,5 +51,19 @@ public class OrderJpaAdapter implements IOrderPersistencePort {
     public boolean existsActiveOrderByClientId(Long clientId, List<OrderStatus> activeStatuses) {
         log.debug("[JPA ADAPTER] Verificando pedidos activos para cliente: {}", clientId);
         return orderRepository.existsByIdClienteAndEstadoIn(clientId, activeStatuses);
+    }
+
+    @Override
+    public Page<OrderModel> findByRestaurantIdAndStatus(Long restaurantId, OrderStatus status, Pageable pageable) {
+        log.debug("[JPA ADAPTER] Buscando pedidos: restaurante={}, estado={}, page={}", 
+                restaurantId, status, pageable.getPageNumber());
+        
+        Page<OrderEntity> orderEntities = orderRepository.findByIdRestauranteAndEstado(
+                restaurantId, status, pageable);
+        
+        log.debug("[JPA ADAPTER] Encontrados {} pedidos de {} total", 
+                orderEntities.getNumberOfElements(), orderEntities.getTotalElements());
+        
+        return orderEntities.map(orderEntityMapper::toModel);
     }
 }

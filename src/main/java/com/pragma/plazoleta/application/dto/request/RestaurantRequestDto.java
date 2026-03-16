@@ -29,6 +29,6 @@ public class RestaurantRequestDto {
     @NotBlank(message = "La URL del logo es obligatoria")
     private String urlLogo;
 
-    @NotNull(message = "El ID del propietario es obligatorio")
-    private Long idUsuarioPropietario;
+    @NotBlank(message = "El correo del propietario es obligatorio")
+    private String correoPropietario;
 }

@@ -7,7 +7,11 @@ import com.pragma.plazoleta.application.dto.response.RestaurantResponseDto;
 import com.pragma.plazoleta.application.handler.IRestaurantHandler;
 import com.pragma.plazoleta.application.mapper.IRestaurantRequestMapper;
 import com.pragma.plazoleta.domain.api.IRestaurantServicePort;
+import com.pragma.plazoleta.domain.exception.DomainException;
+import com.pragma.plazoleta.domain.exception.ExceptionConstants;
 import com.pragma.plazoleta.domain.model.RestaurantModel;
+import com.pragma.plazoleta.domain.model.UserModel;
+import com.pragma.plazoleta.domain.spi.IUserPersistencePort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -26,13 +30,24 @@ public class RestaurantHandler implements IRestaurantHandler {
 
     private final IRestaurantServicePort restaurantServicePort;
     private final IRestaurantRequestMapper restaurantRequestMapper;
+    private final IUserPersistencePort userPersistencePort;
 
     @Override
     public RestaurantResponseDto saveRestaurant(RestaurantRequestDto restaurantRequestDto) {
-        log.info("[HANDLER] Iniciando proceso de creación de restaurante: nombre={}, propietario={}",
-                restaurantRequestDto.getNombre(), restaurantRequestDto.getIdUsuarioPropietario());
+        log.info("[HANDLER] Iniciando proceso de creación de restaurante: nombre={}, correoPropietario={}",
+                restaurantRequestDto.getNombre(), restaurantRequestDto.getCorreoPropietario());
+
+        UserModel propietario = userPersistencePort.findUserByEmail(restaurantRequestDto.getCorreoPropietario())
+                .orElseThrow(() -> {
+                    log.warn("[HANDLER] Propietario no encontrado: correo={}", restaurantRequestDto.getCorreoPropietario());
+                    return new DomainException(ExceptionConstants.USER_NOT_FOUND_MESSAGE);
+                });
+
+        log.debug("[HANDLER] Propietario encontrado: id={}, nombre={}", propietario.getId(), propietario.getNombre());
 
         RestaurantModel restaurantModel = restaurantRequestMapper.toRestaurant(restaurantRequestDto);
+        restaurantModel.setIdUsuarioPropietario(propietario.getId());
+        
         RestaurantModel saved = restaurantServicePort.saveRestaurant(restaurantModel);
         log.info("[HANDLER] Proceso finalizado correctamente para restaurante: {}",
                 restaurantRequestDto.getNombre());

@@ -38,4 +38,7 @@ public class EmployeeRequestDto {
 
     // Campo opcional para empleados
     private LocalDate fechaNacimiento;
+
+    @NotNull(message = "El idRestaurante es obligatorio")
+    private Long idRestaurante;
 }

@@ -50,7 +50,8 @@ public class SecurityConfig {
                 .antMatchers(HttpMethod.POST, "/employee/").hasRole("PROPIETARIO")
                 // Crear pedido: solo CLIENTE
                 .antMatchers(HttpMethod.POST, "/order/").hasRole("CLIENTE")
-                // Cualquier otra petición requiere autenticación
+                // Listar pedidos por estado: solo EMPLEADO
+                .antMatchers(HttpMethod.GET, "/order/").hasRole("EMPLEADO")
                 .anyRequest().authenticated();
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
