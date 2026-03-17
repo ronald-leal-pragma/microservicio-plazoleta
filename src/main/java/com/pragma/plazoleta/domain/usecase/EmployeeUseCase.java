@@ -33,7 +33,7 @@ public class EmployeeUseCase implements IEmployeeServicePort {
 
         log.debug("[USE CASE] Asignando rol EMPLEADO al nuevo usuario");
         employeeModel.setRol(RolModel.builder()
-                .nombre(ExceptionConstants.ROL_EMPLEADO)
+                .nombre(ExceptionConstants.ROL_EMPLEADO) //TOdo: asignar a enum
                 .id(ExceptionConstants.ROL_EMPLEADO_ID)
                 .build());
 

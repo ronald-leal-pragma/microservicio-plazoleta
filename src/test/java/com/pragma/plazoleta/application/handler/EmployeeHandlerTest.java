@@ -43,6 +43,7 @@ class EmployeeHandlerTest {
     private EmployeeHandler employeeHandler;
 
     private static final Long OWNER_ID = 10L;
+    private static final Long RESTAURANT_ID = 2L;
 
     private EmployeeRequestDto requestDto;
     private UserModel employeeModel;
@@ -65,6 +66,7 @@ class EmployeeHandlerTest {
         requestDto.setCelular("3001234567");
         requestDto.setClave("clave123");
         requestDto.setIdRol(3L);
+        requestDto.setIdRestaurante(RESTAURANT_ID);
         requestDto.setFechaNacimiento(LocalDate.of(1990, 5, 15));
 
         employeeModel = UserModel.builder()
@@ -91,7 +93,7 @@ class EmployeeHandlerTest {
     @DisplayName("Debe retornar EmployeeResponseDto cuando el empleado es creado")
     void createEmployee_shouldReturnResponseDtoWhenCreated() {
         when(employeeRequestMapper.toUser(requestDto)).thenReturn(employeeModel);
-        when(employeeServicePort.createEmployee(employeeModel, OWNER_ID,1L)).thenReturn(createdEmployee);
+        when(employeeServicePort.createEmployee(employeeModel, OWNER_ID, RESTAURANT_ID)).thenReturn(createdEmployee);
 
         EmployeeResponseDto result = employeeHandler.createEmployee(requestDto);
 
@@ -108,7 +110,7 @@ class EmployeeHandlerTest {
     void createEmployee_shouldReturnNullRolWhenEmployeeHasNoRole() {
         createdEmployee.setRol(null);
         when(employeeRequestMapper.toUser(requestDto)).thenReturn(employeeModel);
-        when(employeeServicePort.createEmployee(employeeModel, OWNER_ID,1L)).thenReturn(createdEmployee);
+        when(employeeServicePort.createEmployee(employeeModel, OWNER_ID, RESTAURANT_ID)).thenReturn(createdEmployee);
 
         EmployeeResponseDto result = employeeHandler.createEmployee(requestDto);
 
@@ -120,18 +122,18 @@ class EmployeeHandlerTest {
     @DisplayName("Debe llamar al servicio con el ID del propietario autenticado")
     void createEmployee_shouldCallServiceWithAuthenticatedOwnerId() {
         when(employeeRequestMapper.toUser(requestDto)).thenReturn(employeeModel);
-        when(employeeServicePort.createEmployee(any(), eq(OWNER_ID),1L)).thenReturn(createdEmployee);
+        when(employeeServicePort.createEmployee(any(), eq(OWNER_ID), eq(RESTAURANT_ID))).thenReturn(createdEmployee);
 
         employeeHandler.createEmployee(requestDto);
 
-        verify(employeeServicePort).createEmployee(employeeModel, OWNER_ID,1L);
+        verify(employeeServicePort).createEmployee(employeeModel, OWNER_ID, RESTAURANT_ID);
     }
 
     @Test
     @DisplayName("Debe llamar al mapper para convertir el requestDto en modelo")
     void createEmployee_shouldCallMapper() {
         when(employeeRequestMapper.toUser(requestDto)).thenReturn(employeeModel);
-        when(employeeServicePort.createEmployee(any(), any(),1L)).thenReturn(createdEmployee);
+        when(employeeServicePort.createEmployee(any(), any(), any())).thenReturn(createdEmployee);
 
         employeeHandler.createEmployee(requestDto);
 
@@ -149,4 +151,3 @@ class EmployeeHandlerTest {
                 () -> employeeHandler.createEmployee(requestDto));
     }
 }
-

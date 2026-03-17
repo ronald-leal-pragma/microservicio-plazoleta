@@ -1,10 +1,8 @@
 package com.pragma.plazoleta.infrastructure.out.jpa.adapter;
 
-import com.pragma.plazoleta.domain.model.OrderItemModel;
 import com.pragma.plazoleta.domain.model.OrderModel;
 import com.pragma.plazoleta.domain.model.OrderStatus;
 import com.pragma.plazoleta.infrastructure.out.jpa.entity.OrderEntity;
-import com.pragma.plazoleta.infrastructure.out.jpa.entity.OrderItemEntity;
 import com.pragma.plazoleta.infrastructure.out.jpa.mapper.IOrderEntityMapper;
 import com.pragma.plazoleta.infrastructure.out.jpa.repository.IOrderRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +12,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -39,18 +41,10 @@ class OrderJpaAdapterTest {
 
     @BeforeEach
     void setUp() {
-        OrderItemModel item = OrderItemModel.builder()
-                .idPlato(3L)
-                .cantidad(2)
-                .nombrePlato("Bandeja Paisa")
-                .precioPlato(25000)
-                .build();
-
         orderModel = OrderModel.builder()
                 .idCliente(1L)
                 .idRestaurante(2L)
                 .estado(OrderStatus.PENDIENTE)
-                .items(Arrays.asList(item))
                 .build();
 
         orderEntity = new OrderEntity();
@@ -60,9 +54,13 @@ class OrderJpaAdapterTest {
         orderEntity.setEstado(OrderStatus.PENDIENTE);
     }
 
+    // =========================================================
+    // saveOrder
+    // =========================================================
+
     @Test
-    @DisplayName("Debe guardar el pedido con sus items y retornar el modelo mapeado")
-    void saveOrder_shouldSaveOrderWithItemsAndReturnMappedModel() {
+    @DisplayName("Debe guardar el pedido y retornar el modelo mapeado")
+    void saveOrder_shouldSaveAndReturnMappedModel() {
         OrderModel expectedResult = OrderModel.builder()
                 .id(100L)
                 .idCliente(1L)
@@ -70,7 +68,7 @@ class OrderJpaAdapterTest {
                 .build();
 
         when(orderEntityMapper.toEntity(orderModel)).thenReturn(orderEntity);
-        when(orderRepository.save(any(OrderEntity.class))).thenReturn(orderEntity);
+        when(orderRepository.save(orderEntity)).thenReturn(orderEntity);
         when(orderEntityMapper.toModel(orderEntity)).thenReturn(expectedResult);
 
         OrderModel result = orderJpaAdapter.saveOrder(orderModel);
@@ -82,46 +80,22 @@ class OrderJpaAdapterTest {
     }
 
     @Test
-    @DisplayName("Debe agregar los items a la entidad antes de guardar")
-    void saveOrder_shouldAddItemsToEntityBeforeSaving() {
+    @DisplayName("Debe delegar el mapeo completo al mapper incluyendo items")
+    void saveOrder_shouldDelegateFullMappingToMapper() {
         when(orderEntityMapper.toEntity(orderModel)).thenReturn(orderEntity);
-        when(orderRepository.save(any(OrderEntity.class))).thenReturn(orderEntity);
+        when(orderRepository.save(orderEntity)).thenReturn(orderEntity);
         when(orderEntityMapper.toModel(orderEntity)).thenReturn(orderModel);
 
         orderJpaAdapter.saveOrder(orderModel);
 
-        verify(orderRepository).save(argThat(entity ->
-                entity.getItems() != null && !entity.getItems().isEmpty()
-        ));
-    }
-
-    @Test
-    @DisplayName("Debe guardar pedido sin items cuando la lista es nula")
-    void saveOrder_shouldSaveOrderWithNullItems() {
-        orderModel.setItems(null);
-        when(orderEntityMapper.toEntity(orderModel)).thenReturn(orderEntity);
-        when(orderRepository.save(orderEntity)).thenReturn(orderEntity);
-        when(orderEntityMapper.toModel(orderEntity)).thenReturn(orderModel);
-
-        OrderModel result = orderJpaAdapter.saveOrder(orderModel);
-
-        assertNotNull(result);
+        verify(orderEntityMapper).toEntity(orderModel);
         verify(orderRepository).save(orderEntity);
+        verify(orderEntityMapper).toModel(orderEntity);
     }
 
-    @Test
-    @DisplayName("Debe guardar pedido con lista de items vacía")
-    void saveOrder_shouldSaveOrderWithEmptyItems() {
-        orderModel.setItems(List.of());
-        when(orderEntityMapper.toEntity(orderModel)).thenReturn(orderEntity);
-        when(orderRepository.save(orderEntity)).thenReturn(orderEntity);
-        when(orderEntityMapper.toModel(orderEntity)).thenReturn(orderModel);
-
-        OrderModel result = orderJpaAdapter.saveOrder(orderModel);
-
-        assertNotNull(result);
-    }
-
+    // =========================================================
+    // existsActiveOrderByClientId
+    // =========================================================
 
     @Test
     @DisplayName("Debe retornar true cuando el cliente tiene un pedido activo")
@@ -146,5 +120,39 @@ class OrderJpaAdapterTest {
 
         assertFalse(result);
     }
-}
 
+    // =========================================================
+    // findByRestaurantIdAndStatus
+    // =========================================================
+
+    @Test
+    @DisplayName("Debe retornar página de pedidos filtrados por restaurante y estado")
+    void findByRestaurantIdAndStatus_shouldReturnFilteredOrders() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<OrderEntity> entityPage = new PageImpl<>(List.of(orderEntity));
+        OrderModel mappedOrder = OrderModel.builder().id(100L).estado(OrderStatus.PENDIENTE).build();
+
+        when(orderRepository.findByIdRestauranteAndEstado(2L, OrderStatus.PENDIENTE, pageable))
+                .thenReturn(entityPage);
+        when(orderEntityMapper.toModel(orderEntity)).thenReturn(mappedOrder);
+
+        Page<OrderModel> result = orderJpaAdapter.findByRestaurantIdAndStatus(2L, OrderStatus.PENDIENTE, pageable);
+
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        assertEquals(100L, result.getContent().get(0).getId());
+    }
+
+    @Test
+    @DisplayName("Debe retornar página vacía cuando no hay pedidos con ese estado")
+    void findByRestaurantIdAndStatus_shouldReturnEmptyWhenNoOrders() {
+        Pageable pageable = PageRequest.of(0, 10);
+        when(orderRepository.findByIdRestauranteAndEstado(2L, OrderStatus.ENTREGADO, pageable))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        Page<OrderModel> result = orderJpaAdapter.findByRestaurantIdAndStatus(2L, OrderStatus.ENTREGADO, pageable);
+
+        assertNotNull(result);
+        assertTrue(result.getContent().isEmpty());
+    }
+}

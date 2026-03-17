@@ -7,7 +7,11 @@ import com.pragma.plazoleta.application.dto.response.RestaurantResponseDto;
 import com.pragma.plazoleta.application.handler.impl.RestaurantHandler;
 import com.pragma.plazoleta.application.mapper.IRestaurantRequestMapper;
 import com.pragma.plazoleta.domain.api.IRestaurantServicePort;
+import com.pragma.plazoleta.domain.exception.DomainException;
+import com.pragma.plazoleta.domain.exception.ExceptionConstants;
 import com.pragma.plazoleta.domain.model.RestaurantModel;
+import com.pragma.plazoleta.domain.model.UserModel;
+import com.pragma.plazoleta.domain.spi.IUserPersistencePort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,6 +25,7 @@ import org.springframework.data.domain.PageRequest;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -35,11 +40,18 @@ class RestaurantHandlerTest {
     @Mock
     private IRestaurantRequestMapper restaurantRequestMapper;
 
+    @Mock
+    private IUserPersistencePort userPersistencePort;
+
     @InjectMocks
     private RestaurantHandler restaurantHandler;
 
+    private static final String CORREO_PROPIETARIO = "propietario@mail.com";
+    private static final Long PROPIETARIO_ID = 1L;
+
     private RestaurantRequestDto requestDto;
     private RestaurantModel restaurantModel;
+    private UserModel propietario;
 
     @BeforeEach
     void setUp() {
@@ -49,7 +61,7 @@ class RestaurantHandlerTest {
         requestDto.setDireccion("Calle 10 # 20-30");
         requestDto.setTelefono("+573001234567");
         requestDto.setUrlLogo("http://logo.com/logo.png");
-        requestDto.setIdUsuarioPropietario(1L);
+        requestDto.setCorreoPropietario(CORREO_PROPIETARIO);
 
         restaurantModel = new RestaurantModel();
         restaurantModel.setId(1L);
@@ -57,11 +69,19 @@ class RestaurantHandlerTest {
         restaurantModel.setNit("123456789");
         restaurantModel.setCreadoEn(Instant.now());
         restaurantModel.setUrlLogo("http://logo.com/logo.png");
+        restaurantModel.setIdUsuarioPropietario(PROPIETARIO_ID);
+
+        propietario = UserModel.builder()
+                .id(PROPIETARIO_ID)
+                .nombre("Juan")
+                .correo(CORREO_PROPIETARIO)
+                .build();
     }
 
     @Test
     @DisplayName("Debe retornar RestaurantResponseDto cuando el restaurante es creado")
     void saveRestaurant_shouldReturnResponseDtoWhenCreated() {
+        when(userPersistencePort.findUserByEmail(CORREO_PROPIETARIO)).thenReturn(Optional.of(propietario));
         when(restaurantRequestMapper.toRestaurant(requestDto)).thenReturn(restaurantModel);
         when(restaurantServicePort.saveRestaurant(restaurantModel)).thenReturn(restaurantModel);
 
@@ -75,9 +95,34 @@ class RestaurantHandlerTest {
     }
 
     @Test
+    @DisplayName("Debe asignar el ID del propietario al modelo antes de guardar")
+    void saveRestaurant_shouldSetOwnerIdFromFoundUser() {
+        when(userPersistencePort.findUserByEmail(CORREO_PROPIETARIO)).thenReturn(Optional.of(propietario));
+        when(restaurantRequestMapper.toRestaurant(requestDto)).thenReturn(restaurantModel);
+        when(restaurantServicePort.saveRestaurant(any())).thenReturn(restaurantModel);
+
+        restaurantHandler.saveRestaurant(requestDto);
+
+        assertEquals(PROPIETARIO_ID, restaurantModel.getIdUsuarioPropietario());
+    }
+
+    @Test
+    @DisplayName("Debe lanzar DomainException cuando el propietario no existe por correo")
+    void saveRestaurant_shouldThrowWhenOwnerNotFoundByEmail() {
+        when(userPersistencePort.findUserByEmail(CORREO_PROPIETARIO)).thenReturn(Optional.empty());
+
+        DomainException ex = assertThrows(DomainException.class,
+                () -> restaurantHandler.saveRestaurant(requestDto));
+
+        assertEquals(ExceptionConstants.USER_NOT_FOUND_MESSAGE, ex.getMessage());
+        verify(restaurantServicePort, never()).saveRestaurant(any());
+    }
+
+    @Test
     @DisplayName("Debe retornar creadoEn nulo cuando el modelo no tiene fecha")
     void saveRestaurant_shouldReturnNullCreadoEnWhenModelHasNullDate() {
         restaurantModel.setCreadoEn(null);
+        when(userPersistencePort.findUserByEmail(CORREO_PROPIETARIO)).thenReturn(Optional.of(propietario));
         when(restaurantRequestMapper.toRestaurant(requestDto)).thenReturn(restaurantModel);
         when(restaurantServicePort.saveRestaurant(restaurantModel)).thenReturn(restaurantModel);
 
@@ -87,17 +132,18 @@ class RestaurantHandlerTest {
     }
 
     @Test
-    @DisplayName("Debe llamar al servicio y al mapper al guardar restaurante")
-    void saveRestaurant_shouldCallServiceAndMapper() {
+    @DisplayName("Debe llamar al servicio, mapper y puerto de usuario al guardar restaurante")
+    void saveRestaurant_shouldCallServiceMapperAndUserPort() {
+        when(userPersistencePort.findUserByEmail(CORREO_PROPIETARIO)).thenReturn(Optional.of(propietario));
         when(restaurantRequestMapper.toRestaurant(requestDto)).thenReturn(restaurantModel);
         when(restaurantServicePort.saveRestaurant(restaurantModel)).thenReturn(restaurantModel);
 
         restaurantHandler.saveRestaurant(requestDto);
 
+        verify(userPersistencePort).findUserByEmail(CORREO_PROPIETARIO);
         verify(restaurantRequestMapper).toRestaurant(requestDto);
         verify(restaurantServicePort).saveRestaurant(restaurantModel);
     }
-
 
     @Test
     @DisplayName("Debe retornar página de restaurantes con información básica")
@@ -150,4 +196,3 @@ class RestaurantHandlerTest {
         verify(restaurantServicePort).listRestaurants(PageRequest.of(2, 5));
     }
 }
-

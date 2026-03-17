@@ -32,56 +32,42 @@ public class PlateHandler implements IPlateHandler {
 
     @Override
     public PlateResponseDto savePlate(PlateRequestDto plateRequestDto) {
-        log.info("[HANDLER] Iniciando proceso de creación de plato: nombre={}, restaurante={}", 
+        log.info("[HANDLER] Iniciando proceso de creación de plato: nombre={}, restaurante={}",
                 plateRequestDto.getNombre(), plateRequestDto.getIdRestaurante());
+
         Long idUsuarioPropietario = getAuthenticatedUserId();
         PlateModel plateModel = plateRequestMapper.toPlate(plateRequestDto);
         PlateModel saved = plateServicePort.savePlate(plateModel, idUsuarioPropietario);
-        log.info("[HANDLER] Proceso finalizado correctamente para plato: {}", 
-                plateRequestDto.getNombre());
-        PlateResponseDto dto = new PlateResponseDto();
-        dto.setId(saved.getId());
-        dto.setNombre(saved.getNombre());
-        dto.setPrecio(saved.getPrecio());
-        dto.setDescripcion(saved.getDescripcion());
-        dto.setCreadoEn(saved.getCreadoEn() != null ? saved.getCreadoEn().toString() : null);
-        return dto;
+
+        log.info("[HANDLER] Proceso finalizado correctamente para plato: {}", plateRequestDto.getNombre());
+        return toResponseDto(saved);
     }
 
     @Override
     public PlateResponseDto updatePlate(Long idPlate, PlateUpdateRequestDto plateUpdateRequestDto) {
         log.info("[HANDLER] Iniciando proceso de actualización de plato: id={}", idPlate);
+
         Long idUsuarioPropietario = getAuthenticatedUserId();
         PlateModel updated = plateServicePort.updatePlate(
-                idPlate, 
-                plateUpdateRequestDto.getPrecio(), 
+                idPlate,
+                plateUpdateRequestDto.getPrecio(),
                 plateUpdateRequestDto.getDescripcion(),
                 idUsuarioPropietario
         );
+
         log.info("[HANDLER] Proceso finalizado correctamente para plato: id={}", idPlate);
-        PlateResponseDto dto = new PlateResponseDto();
-        dto.setId(updated.getId());
-        dto.setNombre(updated.getNombre());
-        dto.setPrecio(updated.getPrecio());
-        dto.setDescripcion(updated.getDescripcion());
-        dto.setCreadoEn(updated.getCreadoEn() != null ? updated.getCreadoEn().toString() : null);
-        return dto;
+        return toResponseDto(updated);
     }
 
     @Override
     public PlateResponseDto togglePlateStatus(Long idPlate, Boolean activa) {
         log.info("[HANDLER] Iniciando cambio de estado de plato: id={}, activa={}", idPlate, activa);
+
         Long idUsuarioPropietario = getAuthenticatedUserId();
         PlateModel updated = plateServicePort.togglePlateStatus(idPlate, activa, idUsuarioPropietario);
+
         log.info("[HANDLER] Estado del plato actualizado exitosamente: id={}", idPlate);
-        PlateResponseDto dto = new PlateResponseDto();
-        dto.setId(updated.getId());
-        dto.setNombre(updated.getNombre());
-        dto.setPrecio(updated.getPrecio());
-        dto.setDescripcion(updated.getDescripcion());
-        dto.setActiva(updated.getActiva());
-        dto.setCreadoEn(updated.getCreadoEn() != null ? updated.getCreadoEn().toString() : null);
-        return dto;
+        return toResponseDto(updated);
     }
 
     @Override
@@ -94,14 +80,7 @@ public class PlateHandler implements IPlateHandler {
                 restaurantId, category, PageRequest.of(page, size));
 
         List<PlateListResponseDto> content = platePage.getContent().stream()
-                .map(p -> PlateListResponseDto.builder()
-                        .id(p.getId())
-                        .nombre(p.getNombre())
-                        .descripcion(p.getDescripcion())
-                        .precio(p.getPrecio())
-                        .urlImagen(p.getUrlImagen())
-                        .categoria(p.getCategoria())
-                        .build())
+                .map(this::toListResponseDto)
                 .collect(Collectors.toList());
 
         log.info("[HANDLER] Platos encontrados: {} de {} total", content.size(), platePage.getTotalElements());
@@ -113,6 +92,28 @@ public class PlateHandler implements IPlateHandler {
                 .totalElements(platePage.getTotalElements())
                 .totalPages(platePage.getTotalPages())
                 .last(platePage.isLast())
+                .build();
+    }
+
+    private PlateResponseDto toResponseDto(PlateModel model) {
+        return PlateResponseDto.builder()
+                .id(model.getId())
+                .nombre(model.getNombre())
+                .precio(model.getPrecio())
+                .descripcion(model.getDescripcion())
+                .activa(model.getActiva())
+                .creadoEn(model.getCreadoEn() != null ? model.getCreadoEn().toString() : null)
+                .build();
+    }
+
+    private PlateListResponseDto toListResponseDto(PlateModel model) {
+        return PlateListResponseDto.builder()
+                .id(model.getId())
+                .nombre(model.getNombre())
+                .descripcion(model.getDescripcion())
+                .precio(model.getPrecio())
+                .urlImagen(model.getUrlImagen())
+                .categoria(model.getCategoria())
                 .build();
     }
 

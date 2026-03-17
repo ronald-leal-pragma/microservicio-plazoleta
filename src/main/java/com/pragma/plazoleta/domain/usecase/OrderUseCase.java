@@ -40,33 +40,23 @@ public class OrderUseCase implements IOrderServicePort {
         log.info("[USE CASE] Iniciando creación de pedido para cliente: {}, restaurante: {}",
                 idCliente, orderModel.getIdRestaurante());
 
-        // Validar que el restaurante existe
         validateRestaurantExists(orderModel.getIdRestaurante());
-
-        // Validar que el cliente no tiene pedidos activos
         validateNoActiveOrders(idCliente);
 
-        // Validar y enriquecer los items del pedido
         validateAndEnrichOrderItems(orderModel);
 
-        // Establecer datos del pedido
         orderModel.setIdCliente(idCliente);
         orderModel.setEstado(OrderStatus.PENDIENTE);
 
         log.info("[USE CASE] Todas las validaciones OK, persistiendo pedido");
-        OrderModel saved = orderPersistencePort.saveOrder(orderModel);
 
-        log.info("[USE CASE] Pedido creado exitosamente: id={}, estado={}", 
-                saved.getId(), saved.getEstado());
-
-        return saved;
+        return orderPersistencePort.saveOrder(orderModel);
     }
 
     @Override
     public Page<OrderModel> listOrdersByStatus(OrderStatus status, Long employeeId, Pageable pageable) {
         log.info("[USE CASE] Listando pedidos por estado: {}, empleado: {}", status, employeeId);
 
-        // Obtener el restaurante al que pertenece el empleado
         EmployeeRestaurantModel employeeRestaurant = employeeRestaurantPersistencePort
                 .findByEmployeeId(employeeId)
                 .orElseThrow(() -> {
@@ -77,7 +67,6 @@ public class OrderUseCase implements IOrderServicePort {
         Long restaurantId = employeeRestaurant.getIdRestaurante();
         log.debug("[USE CASE] Empleado {} pertenece al restaurante {}", employeeId, restaurantId);
 
-        // Obtener pedidos del restaurante filtrados por estado
         Page<OrderModel> orders = orderPersistencePort.findByRestaurantIdAndStatus(
                 restaurantId, status, pageable);
 
@@ -120,20 +109,17 @@ public class OrderUseCase implements IOrderServicePort {
                         return new DomainException(ExceptionConstants.PLATE_NOT_FOUND_MESSAGE);
                     });
 
-            // Validar que el plato pertenece al restaurante
             if (!plate.getIdRestaurante().equals(orderModel.getIdRestaurante())) {
                 log.warn("[USE CASE] Plato {} no pertenece al restaurante {}", 
                         item.getIdPlato(), orderModel.getIdRestaurante());
                 throw new DomainException(ExceptionConstants.PLATE_NOT_BELONGS_TO_RESTAURANT_MESSAGE);
             }
 
-            // Validar que el plato está activo
             if (!Boolean.TRUE.equals(plate.getActiva())) {
                 log.warn("[USE CASE] Plato no disponible: id={}", item.getIdPlato());
                 throw new DomainException(ExceptionConstants.PLATE_NOT_ACTIVE_MESSAGE);
             }
 
-            // Enriquecer el item con datos del plato
             item.setNombrePlato(plate.getNombre());
             item.setPrecioPlato(plate.getPrecio());
         }
