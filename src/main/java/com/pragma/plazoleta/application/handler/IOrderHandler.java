@@ -13,4 +13,5 @@ public interface IOrderHandler {
     OrderListResponseDto assignOrderToEmployee(Long orderId);
     
     OrderListResponseDto markOrderAsReady(Long orderId);
+    OrderListResponseDto markOrderAsDelivered(Long orderId, String pin);
 }

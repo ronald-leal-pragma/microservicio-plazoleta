@@ -113,4 +113,30 @@ public class OrderRestController {
         log.info("[REST] Pedido {} marcado como LISTO, PIN generado", orderId);
         return ResponseEntity.ok(readyOrder);
     }
+
+    @Operation(summary = "Marcar pedido como ENTREGADO",
+            description = "El empleado marca un pedido en listo como entregado.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Pedido marcado como entregado"),
+            @ApiResponse(responseCode = "400", description = "El pedido no está en estado LISTO",
+                    content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autorizado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "El empleado no pertenece al restaurante del pedido",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Pedido no encontrado",
+                    content = @Content)
+    })
+    @PatchMapping("/{orderId}/delivered")
+    public ResponseEntity<OrderListResponseDto> markOrderAsDelivered(
+            @PathVariable Long orderId,
+            @RequestParam String pin) {
+
+        log.info("[REST] PATCH /order/{}/entregado - Intento de entrega con PIN", orderId);
+
+        OrderListResponseDto deliveredOrder = orderHandler.markOrderAsDelivered(orderId, pin);
+
+        log.info("[REST] Pedido {} entregado exitosamente con PIN verificado", orderId);
+        return ResponseEntity.ok(deliveredOrder);
+    }
 }

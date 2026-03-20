@@ -7,12 +7,7 @@ import com.pragma.plazoleta.domain.exception.message.OrderErrorMessages;
 import com.pragma.plazoleta.domain.exception.message.PlateErrorMessages;
 import com.pragma.plazoleta.domain.exception.message.RestaurantErrorMessages;
 import com.pragma.plazoleta.domain.model.*;
-import com.pragma.plazoleta.domain.spi.IEmployeeRestaurantPersistencePort;
-import com.pragma.plazoleta.domain.spi.IOrderPersistencePort;
-import com.pragma.plazoleta.domain.spi.IPlatePersistencePort;
-import com.pragma.plazoleta.domain.spi.IRestaurantPersistencePort;
-import com.pragma.plazoleta.domain.spi.ISmsNotificationPort;
-import com.pragma.plazoleta.domain.spi.IUserPersistencePort;
+import com.pragma.plazoleta.domain.spi.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -217,6 +212,44 @@ public class OrderUseCase implements IOrderServicePort {
         sendSmsNotification(order, employeeRestaurant.getIdRestaurante(), pin);
 
         return savedOrder;
+    }
+
+    @Override
+    public OrderModel markOrderAsDelivered(Long orderId, Long employeeId, String pin) {
+        log.info("[USE CASE] Intentando entregar pedido {}. Empleado: {}", orderId, employeeId);
+
+        EmployeeRestaurantModel employeeRestaurant = getEmployeeRestaurant(employeeId);
+        OrderModel order = getOrderById(orderId);
+
+        validateOrderIsReady(order);
+        validateOrderBelongsToEmployeeRestaurant(order, employeeRestaurant);
+
+        if (order.getPin() == null || !order.getPin().equals(pin)) {
+            log.warn("[USE CASE] PIN inválido para el pedido {}. Esperado: {}, Recibido: {}",
+                    orderId, order.getPin(), pin);
+            throw new DomainException(OrderErrorMessages.INVALID_PIN);
+        }
+
+        OrderModel updatedOrder = OrderModel.builder()
+                .id(order.getId())
+                .idCliente(order.getIdCliente())
+                .idRestaurante(order.getIdRestaurante())
+                .idChef(order.getIdChef())
+                .estado(OrderStatus.ENTREGADO)
+                .pin(order.getPin())
+                .items(order.getItems())
+                .creadoEn(order.getCreadoEn())
+                .actualizadoEn(order.getActualizadoEn())
+                .build();
+
+        log.info("[USE CASE] Pedido {} listo para ser persistido como ENTREGADO", orderId);
+        return orderPersistencePort.saveOrder(updatedOrder);
+    }
+
+    private void validateOrderIsReady(OrderModel order) {
+        if (order.getEstado() != OrderStatus.LISTO) {
+            throw new DomainException(OrderErrorMessages.ORDER_NOT_READY_FOR_DELIVERY);
+        }
     }
 
     private void validateOrderIsInPreparation(OrderModel order) {

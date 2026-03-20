@@ -6,12 +6,7 @@ import com.pragma.plazoleta.domain.exception.message.OrderErrorMessages;
 import com.pragma.plazoleta.domain.exception.message.PlateErrorMessages;
 import com.pragma.plazoleta.domain.exception.message.RestaurantErrorMessages;
 import com.pragma.plazoleta.domain.model.*;
-import com.pragma.plazoleta.domain.spi.IEmployeeRestaurantPersistencePort;
-import com.pragma.plazoleta.domain.spi.IOrderPersistencePort;
-import com.pragma.plazoleta.domain.spi.IPlatePersistencePort;
-import com.pragma.plazoleta.domain.spi.IRestaurantPersistencePort;
-import com.pragma.plazoleta.domain.spi.ISmsNotificationPort;
-import com.pragma.plazoleta.domain.spi.IUserPersistencePort;
+import com.pragma.plazoleta.domain.spi.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -513,6 +509,192 @@ class OrderUseCaseTest {
                 () -> orderUseCase.markOrderAsReady(ORDER_ID, EMPLOYEE_ID));
 
         assertEquals(OrderErrorMessages.NOT_BELONGS_TO_RESTAURANT, ex.getMessage());
+        verify(orderPersistencePort, never()).saveOrder(any());
+    }
+
+    // =========================================================
+    // Tests para listOrdersByStatus
+    // =========================================================
+
+    @Test
+    @DisplayName("Debe listar pedidos por estado exitosamente")
+    void listOrdersByStatus_shouldListOrdersSuccessfully() {
+        // Arrange
+        OrderStatus statusToSearch = OrderStatus.PENDIENTE;
+        Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+
+        EmployeeRestaurantModel employeeRestaurant = EmployeeRestaurantModel.builder()
+                .id(1L)
+                .idEmpleado(EMPLOYEE_ID)
+                .idRestaurante(RESTAURANT_ID)
+                .build();
+
+        // Simulamos una página vacía o con datos, lo importante es que se llame al puerto correcto
+        org.springframework.data.domain.Page<OrderModel> expectedPage = org.springframework.data.domain.Page.empty();
+
+        when(employeeRestaurantPersistencePort.findByEmployeeId(EMPLOYEE_ID))
+                .thenReturn(Optional.of(employeeRestaurant));
+        when(orderPersistencePort.findByRestaurantIdAndStatus(RESTAURANT_ID, statusToSearch, pageable))
+                .thenReturn(expectedPage);
+
+        // Act
+        org.springframework.data.domain.Page<OrderModel> result =
+                orderUseCase.listOrdersByStatus(statusToSearch, EMPLOYEE_ID, pageable);
+
+        // Assert
+        assertNotNull(result);
+        verify(employeeRestaurantPersistencePort).findByEmployeeId(EMPLOYEE_ID);
+        verify(orderPersistencePort).findByRestaurantIdAndStatus(RESTAURANT_ID, statusToSearch, pageable);
+    }
+
+    @Test
+    @DisplayName("Debe lanzar excepción al listar si el empleado no pertenece a un restaurante")
+    void listOrdersByStatus_shouldThrowWhenEmployeeNotBelongsToRestaurant() {
+        // Arrange
+        OrderStatus statusToSearch = OrderStatus.PENDIENTE;
+        Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+
+        when(employeeRestaurantPersistencePort.findByEmployeeId(EMPLOYEE_ID))
+                .thenReturn(Optional.empty());
+
+        // Act & Assert
+        DomainException ex = assertThrows(DomainException.class,
+                () -> orderUseCase.listOrdersByStatus(statusToSearch, EMPLOYEE_ID, pageable));
+
+        assertEquals(EmployeeErrorMessages.NOT_BELONGS_TO_RESTAURANT, ex.getMessage());
+        verify(orderPersistencePort, never()).findByRestaurantIdAndStatus(any(), any(), any());
+    }
+
+    // =========================================================
+    // Tests para markOrderAsEntregado
+    // =========================================================
+
+    @Test
+    @DisplayName("Debe marcar pedido como ENTREGADO exitosamente cuando el PIN es correcto")
+    void markOrderAsEntregado_shouldMarkAsDeliveredWhenPinIsCorrect() {
+        // Arrange
+        String validPin = "123456";
+        EmployeeRestaurantModel employeeRestaurant = EmployeeRestaurantModel.builder()
+                .id(1L)
+                .idEmpleado(EMPLOYEE_ID)
+                .idRestaurante(RESTAURANT_ID)
+                .build();
+
+        OrderModel readyOrder = OrderModel.builder()
+                .id(ORDER_ID)
+                .idCliente(CLIENT_ID)
+                .idRestaurante(RESTAURANT_ID)
+                .idChef(EMPLOYEE_ID)
+                .estado(OrderStatus.LISTO)
+                .pin(validPin)
+                .build();
+
+        when(employeeRestaurantPersistencePort.findByEmployeeId(EMPLOYEE_ID))
+                .thenReturn(Optional.of(employeeRestaurant));
+        when(orderPersistencePort.findById(ORDER_ID)).thenReturn(Optional.of(readyOrder));
+        when(orderPersistencePort.saveOrder(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        // Act
+        OrderModel result = orderUseCase.markOrderAsDelivered(ORDER_ID, EMPLOYEE_ID, validPin);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(OrderStatus.ENTREGADO, result.getEstado());
+        assertEquals(validPin, result.getPin()); // Verifica que el PIN se mantuvo
+        verify(orderPersistencePort).saveOrder(any(OrderModel.class));
+    }
+
+    @Test
+    @DisplayName("Debe lanzar excepción al entregar si el PIN es incorrecto")
+    void markOrderAsDelivered_shouldThrowWhenPinIsIncorrect() {
+        // Arrange
+        String correctPin = "123456";
+        String wrongPin = "999999";
+        EmployeeRestaurantModel employeeRestaurant = EmployeeRestaurantModel.builder()
+                .id(1L)
+                .idEmpleado(EMPLOYEE_ID)
+                .idRestaurante(RESTAURANT_ID)
+                .build();
+
+        OrderModel readyOrder = OrderModel.builder()
+                .id(ORDER_ID)
+                .idCliente(CLIENT_ID)
+                .idRestaurante(RESTAURANT_ID)
+                .estado(OrderStatus.LISTO)
+                .pin(correctPin)
+                .build();
+
+        when(employeeRestaurantPersistencePort.findByEmployeeId(EMPLOYEE_ID))
+                .thenReturn(Optional.of(employeeRestaurant));
+        when(orderPersistencePort.findById(ORDER_ID)).thenReturn(Optional.of(readyOrder));
+
+        // Act & Assert
+        DomainException ex = assertThrows(DomainException.class,
+                () -> orderUseCase.markOrderAsDelivered(ORDER_ID, EMPLOYEE_ID, wrongPin));
+
+        assertEquals(OrderErrorMessages.INVALID_PIN, ex.getMessage());
+        verify(orderPersistencePort, never()).saveOrder(any());
+    }
+
+    @Test
+    @DisplayName("Debe lanzar excepción al entregar si el PIN de la orden es nulo")
+    void markOrderAsEntregado_shouldThrowWhenOrderPinIsNull() {
+        // Arrange
+        String providedPin = "123456";
+        EmployeeRestaurantModel employeeRestaurant = EmployeeRestaurantModel.builder()
+                .id(1L)
+                .idEmpleado(EMPLOYEE_ID)
+                .idRestaurante(RESTAURANT_ID)
+                .build();
+
+        OrderModel readyOrder = OrderModel.builder()
+                .id(ORDER_ID)
+                .idCliente(CLIENT_ID)
+                .idRestaurante(RESTAURANT_ID)
+                .estado(OrderStatus.LISTO)
+                .pin(null) // PIN nulo en base de datos
+                .build();
+
+        when(employeeRestaurantPersistencePort.findByEmployeeId(EMPLOYEE_ID))
+                .thenReturn(Optional.of(employeeRestaurant));
+        when(orderPersistencePort.findById(ORDER_ID)).thenReturn(Optional.of(readyOrder));
+
+        // Act & Assert
+        DomainException ex = assertThrows(DomainException.class,
+                () -> orderUseCase.markOrderAsDelivered(ORDER_ID, EMPLOYEE_ID, providedPin));
+
+        assertEquals(OrderErrorMessages.INVALID_PIN, ex.getMessage());
+        verify(orderPersistencePort, never()).saveOrder(any());
+    }
+
+    @Test
+    @DisplayName("Debe lanzar excepción al entregar si la orden no está en estado LISTO")
+    void markOrderAsEntregado_shouldThrowWhenOrderIsNotReady() {
+        // Arrange
+        String pin = "123456";
+        EmployeeRestaurantModel employeeRestaurant = EmployeeRestaurantModel.builder()
+                .id(1L)
+                .idEmpleado(EMPLOYEE_ID)
+                .idRestaurante(RESTAURANT_ID)
+                .build();
+
+        OrderModel pendingOrder = OrderModel.builder()
+                .id(ORDER_ID)
+                .idCliente(CLIENT_ID)
+                .idRestaurante(RESTAURANT_ID)
+                .estado(OrderStatus.PENDIENTE) // Estado incorrecto
+                .pin(pin)
+                .build();
+
+        when(employeeRestaurantPersistencePort.findByEmployeeId(EMPLOYEE_ID))
+                .thenReturn(Optional.of(employeeRestaurant));
+        when(orderPersistencePort.findById(ORDER_ID)).thenReturn(Optional.of(pendingOrder));
+
+        // Act & Assert
+        DomainException ex = assertThrows(DomainException.class,
+                () -> orderUseCase.markOrderAsDelivered(ORDER_ID, EMPLOYEE_ID, pin));
+
+        assertEquals(OrderErrorMessages.ORDER_NOT_READY_FOR_DELIVERY, ex.getMessage());
         verify(orderPersistencePort, never()).saveOrder(any());
     }
 }

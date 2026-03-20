@@ -13,4 +13,5 @@ public interface IOrderServicePort {
     OrderModel assignEmployeeToOrder(Long orderId, Long employeeId);
     
     OrderModel markOrderAsReady(Long orderId, Long employeeId);
+    OrderModel markOrderAsDelivered(Long orderId, Long employeeId, String pin);
 }

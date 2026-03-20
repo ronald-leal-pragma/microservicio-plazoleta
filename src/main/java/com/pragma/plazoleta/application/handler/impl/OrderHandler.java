@@ -35,7 +35,7 @@ public class OrderHandler implements IOrderHandler {
 
     @Override
     public OrderResponseDto createOrder(OrderRequestDto orderRequestDto) {
-        log.info("[HANDLER] Iniciando creación de pedido para restaurante: {}", 
+        log.info("[HANDLER] Iniciando creación de pedido para restaurante: {}",
                 orderRequestDto.getIdRestaurante());
 
         Long idCliente = getAuthenticatedUserId();
@@ -124,16 +124,16 @@ public class OrderHandler implements IOrderHandler {
     }
 
     private OrderListResponseDto mapToListResponse(OrderModel order) {
-        List<OrderItemResponseDto> itemsResponse = order.getItems() != null 
+        List<OrderItemResponseDto> itemsResponse = order.getItems() != null
                 ? order.getItems().stream()
-                    .map(item -> OrderItemResponseDto.builder()
-                            .idPlato(item.getIdPlato())
-                            .nombrePlato(item.getNombrePlato())
-                            .cantidad(item.getCantidad())
-                            .precioUnitario(item.getPrecioPlato())
-                            .subtotal(item.getCantidad() * item.getPrecioPlato())
-                            .build())
-                    .collect(Collectors.toList())
+                .map(item -> OrderItemResponseDto.builder()
+                        .idPlato(item.getIdPlato())
+                        .nombrePlato(item.getNombrePlato())
+                        .cantidad(item.getCantidad())
+                        .precioUnitario(item.getPrecioPlato())
+                        .subtotal(item.getCantidad() * item.getPrecioPlato())
+                        .build())
+                .collect(Collectors.toList())
                 : List.of();
 
         int total = itemsResponse.stream()
@@ -179,6 +179,20 @@ public class OrderHandler implements IOrderHandler {
         log.info("[HANDLER] Pedido {} marcado como LISTO. PIN: {}", orderId, readyOrder.getPin());
 
         return mapToListResponseWithPin(readyOrder);
+    }
+
+    @Override
+    public OrderListResponseDto markOrderAsDelivered(Long orderId, String pin) {
+        log.info("[HANDLER] Marcando pedido {} como ENTREGADO", orderId);
+
+        Long employeeId = getAuthenticatedUserId();
+        log.debug("[HANDLER] Empleado autenticado: id={}", employeeId);
+
+        OrderModel updateOrder = orderServicePort.markOrderAsDelivered(orderId, employeeId, pin);
+
+        log.info("[HANDLER] Pedido {} marcado como ENTREGADO.", orderId, updateOrder.getPin());
+
+        return mapToListResponseWithPin(updateOrder);
     }
 
     private OrderListResponseDto mapToListResponseWithPin(OrderModel order) {
