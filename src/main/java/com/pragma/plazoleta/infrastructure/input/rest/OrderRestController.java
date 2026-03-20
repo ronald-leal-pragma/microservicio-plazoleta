@@ -70,4 +70,47 @@ public class OrderRestController {
         log.info("[REST] Pedidos obtenidos: {} elementos", orders.getTotalElements());
         return ResponseEntity.ok(orders);
     }
+
+    @Operation(summary = "Asignar empleado a pedido",
+               description = "El empleado autenticado se asigna a un pedido y cambia su estado a EN_PREPARACION. Solo empleados pueden acceder.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Pedido asignado exitosamente",
+                         content = @Content(schema = @Schema(implementation = OrderListResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "El pedido no está en estado PENDIENTE",
+                         content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autorizado",
+                         content = @Content),
+            @ApiResponse(responseCode = "403", description = "El empleado no pertenece al restaurante del pedido",
+                         content = @Content),
+            @ApiResponse(responseCode = "404", description = "Pedido no encontrado",
+                         content = @Content)
+    })
+    @PatchMapping("/{orderId}/assign")
+    public ResponseEntity<OrderListResponseDto> assignOrderToEmployee(@PathVariable Long orderId) {
+        log.info("[REST] PATCH /order/{}/assign - Asignando empleado al pedido", orderId);
+        OrderListResponseDto assignedOrder = orderHandler.assignOrderToEmployee(orderId);
+        log.info("[REST] Pedido {} asignado exitosamente, nuevo estado: {}", orderId, assignedOrder.getEstado());
+        return ResponseEntity.ok(assignedOrder);
+    }
+
+    @Operation(summary = "Marcar pedido como LISTO",
+            description = "El empleado marca un pedido en preparación como listo. Genera un PIN y envía SMS al cliente.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Pedido marcado como listo"),
+            @ApiResponse(responseCode = "400", description = "El pedido no está en estado EN_PREPARACION",
+                         content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autorizado",
+                         content = @Content),
+            @ApiResponse(responseCode = "403", description = "El empleado no pertenece al restaurante del pedido",
+                         content = @Content),
+            @ApiResponse(responseCode = "404", description = "Pedido no encontrado",
+                         content = @Content)
+    })
+    @PatchMapping("/{orderId}/ready")
+    public ResponseEntity<OrderListResponseDto> markOrderAsReady(@PathVariable Long orderId) {
+        log.info("[REST] PATCH /order/{}/ready - Marcando pedido como LISTO", orderId);
+        OrderListResponseDto readyOrder = orderHandler.markOrderAsReady(orderId);
+        log.info("[REST] Pedido {} marcado como LISTO, PIN generado", orderId);
+        return ResponseEntity.ok(readyOrder);
+    }
 }

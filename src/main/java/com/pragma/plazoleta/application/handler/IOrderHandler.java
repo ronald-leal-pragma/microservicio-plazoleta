@@ -9,4 +9,8 @@ public interface IOrderHandler {
     OrderResponseDto createOrder(OrderRequestDto orderRequestDto);
     
     PaginatedResponseDto<OrderListResponseDto> listOrdersByStatus(String status, int page, int size);
+    
+    OrderListResponseDto assignOrderToEmployee(Long orderId);
+    
+    OrderListResponseDto markOrderAsReady(Long orderId);
 }

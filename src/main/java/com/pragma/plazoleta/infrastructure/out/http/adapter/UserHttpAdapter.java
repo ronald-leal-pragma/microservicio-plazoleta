@@ -11,6 +11,9 @@ import com.pragma.plazoleta.infrastructure.out.http.dto.UserResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -79,7 +82,11 @@ public class UserHttpAdapter implements IUserPersistencePort {
                 .build();
 
         try {
-            ResponseEntity<UserResponseDto> response = restTemplate.postForEntity(url, requestDto, UserResponseDto.class);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<UserCreateRequestDto> entity = new HttpEntity<>(requestDto, headers);
+
+            ResponseEntity<UserResponseDto> response = restTemplate.postForEntity(url, entity, UserResponseDto.class);
             log.info("[HTTP ADAPTER] Empleado creado exitosamente en microservicio-usuarios");
             return Optional.ofNullable(response.getBody())
                     .map(this::mapToModel)

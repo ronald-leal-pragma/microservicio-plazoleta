@@ -2,7 +2,6 @@ package com.pragma.plazoleta.infrastructure.out.jpa.adapter;
 
 import com.pragma.plazoleta.domain.model.PlateModel;
 import com.pragma.plazoleta.domain.spi.IPlatePersistencePort;
-import com.pragma.plazoleta.infrastructure.exception.NoDataFoundException;
 import com.pragma.plazoleta.infrastructure.out.jpa.entity.PlateEntity;
 import com.pragma.plazoleta.infrastructure.out.jpa.mapper.IPlateEntityMapper;
 import com.pragma.plazoleta.infrastructure.out.jpa.repository.IPlateRepository;

@@ -1,6 +1,8 @@
 package com.pragma.plazoleta.domain.model;
 
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter

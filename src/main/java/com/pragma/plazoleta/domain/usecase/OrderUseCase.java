@@ -2,16 +2,17 @@ package com.pragma.plazoleta.domain.usecase;
 
 import com.pragma.plazoleta.domain.api.IOrderServicePort;
 import com.pragma.plazoleta.domain.exception.DomainException;
-import com.pragma.plazoleta.domain.exception.ExceptionConstants;
-import com.pragma.plazoleta.domain.model.EmployeeRestaurantModel;
-import com.pragma.plazoleta.domain.model.OrderItemModel;
-import com.pragma.plazoleta.domain.model.OrderModel;
-import com.pragma.plazoleta.domain.model.OrderStatus;
-import com.pragma.plazoleta.domain.model.PlateModel;
+import com.pragma.plazoleta.domain.exception.message.EmployeeErrorMessages;
+import com.pragma.plazoleta.domain.exception.message.OrderErrorMessages;
+import com.pragma.plazoleta.domain.exception.message.PlateErrorMessages;
+import com.pragma.plazoleta.domain.exception.message.RestaurantErrorMessages;
+import com.pragma.plazoleta.domain.model.*;
 import com.pragma.plazoleta.domain.spi.IEmployeeRestaurantPersistencePort;
 import com.pragma.plazoleta.domain.spi.IOrderPersistencePort;
 import com.pragma.plazoleta.domain.spi.IPlatePersistencePort;
 import com.pragma.plazoleta.domain.spi.IRestaurantPersistencePort;
+import com.pragma.plazoleta.domain.spi.ISmsNotificationPort;
+import com.pragma.plazoleta.domain.spi.IUserPersistencePort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -34,6 +36,8 @@ public class OrderUseCase implements IOrderServicePort {
     private final IRestaurantPersistencePort restaurantPersistencePort;
     private final IPlatePersistencePort platePersistencePort;
     private final IEmployeeRestaurantPersistencePort employeeRestaurantPersistencePort;
+    private final ISmsNotificationPort smsNotificationPort;
+    private final IUserPersistencePort userPersistencePort;
 
     @Override
     public OrderModel createOrder(OrderModel orderModel, Long idCliente) {
@@ -57,12 +61,7 @@ public class OrderUseCase implements IOrderServicePort {
     public Page<OrderModel> listOrdersByStatus(OrderStatus status, Long employeeId, Pageable pageable) {
         log.info("[USE CASE] Listando pedidos por estado: {}, empleado: {}", status, employeeId);
 
-        EmployeeRestaurantModel employeeRestaurant = employeeRestaurantPersistencePort
-                .findByEmployeeId(employeeId)
-                .orElseThrow(() -> {
-                    log.warn("[USE CASE] El empleado {} no está asignado a ningún restaurante", employeeId);
-                    return new DomainException(ExceptionConstants.EMPLOYEE_NOT_BELONGS_TO_RESTAURANT_MESSAGE);
-                });
+        EmployeeRestaurantModel employeeRestaurant = getEmployeeRestaurant(employeeId);
 
         Long restaurantId = employeeRestaurant.getIdRestaurante();
         log.debug("[USE CASE] Empleado {} pertenece al restaurante {}", employeeId, restaurantId);
@@ -76,13 +75,30 @@ public class OrderUseCase implements IOrderServicePort {
         return orders;
     }
 
+    private EmployeeRestaurantModel getEmployeeRestaurant(Long employeeId) {
+        return employeeRestaurantPersistencePort
+                .findByEmployeeId(employeeId)
+                .orElseThrow(() -> {
+                    log.warn("[USE CASE] El empleado {} no está asignado a ningún restaurante", employeeId);
+                    return new DomainException(EmployeeErrorMessages.NOT_BELONGS_TO_RESTAURANT);
+                });
+    }
+
+    private OrderModel getOrderById(Long orderId) {
+        return orderPersistencePort.findById(orderId)
+                .orElseThrow(() -> {
+                    log.warn("[USE CASE] Pedido no encontrado: id={}", orderId);
+                    return new DomainException(OrderErrorMessages.NOT_FOUND);
+                });
+    }
+
     private void validateRestaurantExists(Long restaurantId) {
         log.debug("[USE CASE] Validando existencia del restaurante: id={}", restaurantId);
 
         restaurantPersistencePort.findRestaurantById(restaurantId)
                 .orElseThrow(() -> {
                     log.warn("[USE CASE] Restaurante no encontrado: id={}", restaurantId);
-                    return new DomainException(ExceptionConstants.RESTAURANT_NOT_FOUND_MESSAGE);
+                    return new DomainException(RestaurantErrorMessages.NOT_FOUND);
                 });
 
         log.debug("[USE CASE] Restaurante validado correctamente");
@@ -93,7 +109,7 @@ public class OrderUseCase implements IOrderServicePort {
 
         if (orderPersistencePort.existsActiveOrderByClientId(clientId, ACTIVE_ORDER_STATUSES)) {
             log.warn("[USE CASE] Cliente ya tiene un pedido activo: clientId={}", clientId);
-            throw new DomainException(ExceptionConstants.CLIENT_HAS_ACTIVE_ORDER_MESSAGE);
+            throw new DomainException(OrderErrorMessages.CLIENT_HAS_ACTIVE_ORDER);
         }
 
         log.debug("[USE CASE] Cliente no tiene pedidos activos");
@@ -106,18 +122,18 @@ public class OrderUseCase implements IOrderServicePort {
             PlateModel plate = platePersistencePort.findPlateById(item.getIdPlato())
                     .orElseThrow(() -> {
                         log.warn("[USE CASE] Plato no encontrado: id={}", item.getIdPlato());
-                        return new DomainException(ExceptionConstants.PLATE_NOT_FOUND_MESSAGE);
+                        return new DomainException(PlateErrorMessages.NOT_FOUND);
                     });
 
             if (!plate.getIdRestaurante().equals(orderModel.getIdRestaurante())) {
                 log.warn("[USE CASE] Plato {} no pertenece al restaurante {}", 
                         item.getIdPlato(), orderModel.getIdRestaurante());
-                throw new DomainException(ExceptionConstants.PLATE_NOT_BELONGS_TO_RESTAURANT_MESSAGE);
+                throw new DomainException(PlateErrorMessages.NOT_BELONGS_TO_RESTAURANT);
             }
 
             if (!Boolean.TRUE.equals(plate.getActiva())) {
                 log.warn("[USE CASE] Plato no disponible: id={}", item.getIdPlato());
-                throw new DomainException(ExceptionConstants.PLATE_NOT_ACTIVE_MESSAGE);
+                throw new DomainException(PlateErrorMessages.NOT_ACTIVE);
             }
 
             item.setNombrePlato(plate.getNombre());
@@ -125,5 +141,117 @@ public class OrderUseCase implements IOrderServicePort {
         }
 
         log.debug("[USE CASE] Todos los items validados y enriquecidos");
+    }
+
+    @Override
+    public OrderModel assignEmployeeToOrder(Long orderId, Long employeeId) {
+        log.info("[USE CASE] Asignando empleado {} al pedido {}", employeeId, orderId);
+
+        EmployeeRestaurantModel employeeRestaurant = getEmployeeRestaurant(employeeId);
+        OrderModel order = getOrderById(orderId);
+
+        validateOrderIsPending(order);
+        validateOrderBelongsToEmployeeRestaurant(order, employeeRestaurant);
+
+        OrderModel updatedOrder = OrderModel.builder()
+                .id(order.getId())
+                .idCliente(order.getIdCliente())
+                .idRestaurante(order.getIdRestaurante())
+                .idChef(employeeId)
+                .estado(OrderStatus.EN_PREPARACION)
+                .creadoEn(order.getCreadoEn())
+                .actualizadoEn(order.getActualizadoEn())
+                .items(order.getItems())
+                .build();
+
+        OrderModel savedOrder = orderPersistencePort.saveOrder(updatedOrder);
+        log.info("[USE CASE] Pedido {} asignado al empleado {} con estado EN_PREPARACION", orderId, employeeId);
+
+        return savedOrder;
+    }
+
+    private void validateOrderIsPending(OrderModel order) {
+        if (!OrderStatus.PENDIENTE.equals(order.getEstado())) {
+            log.warn("[USE CASE] El pedido {} no está en estado PENDIENTE, estado actual: {}", 
+                    order.getId(), order.getEstado());
+            throw new DomainException(OrderErrorMessages.NOT_PENDING);
+        }
+    }
+
+    private void validateOrderBelongsToEmployeeRestaurant(OrderModel order, EmployeeRestaurantModel employeeRestaurant) {
+        if (!order.getIdRestaurante().equals(employeeRestaurant.getIdRestaurante())) {
+            log.warn("[USE CASE] El pedido {} pertenece al restaurante {}, pero el empleado pertenece al restaurante {}", 
+                    order.getId(), order.getIdRestaurante(), employeeRestaurant.getIdRestaurante());
+            throw new DomainException(OrderErrorMessages.NOT_BELONGS_TO_RESTAURANT);
+        }
+    }
+
+    @Override
+    public OrderModel markOrderAsReady(Long orderId, Long employeeId) {
+        log.info("[USE CASE] Marcando pedido {} como LISTO por empleado {}", orderId, employeeId);
+
+        EmployeeRestaurantModel employeeRestaurant = getEmployeeRestaurant(employeeId);
+        OrderModel order = getOrderById(orderId);
+
+        validateOrderIsInPreparation(order);
+        validateOrderBelongsToEmployeeRestaurant(order, employeeRestaurant);
+
+        String pin = generatePin();
+        log.debug("[USE CASE] PIN generado para pedido {}: {}", orderId, pin);
+
+        OrderModel updatedOrder = OrderModel.builder()
+                .id(order.getId())
+                .idCliente(order.getIdCliente())
+                .idRestaurante(order.getIdRestaurante())
+                .idChef(order.getIdChef())
+                .estado(OrderStatus.LISTO)
+                .pin(pin)
+                .creadoEn(order.getCreadoEn())
+                .actualizadoEn(order.getActualizadoEn())
+                .items(order.getItems())
+                .build();
+
+        OrderModel savedOrder = orderPersistencePort.saveOrder(updatedOrder);
+        log.info("[USE CASE] Pedido {} marcado como LISTO", orderId);
+
+        sendSmsNotification(order, employeeRestaurant.getIdRestaurante(), pin);
+
+        return savedOrder;
+    }
+
+    private void validateOrderIsInPreparation(OrderModel order) {
+        if (!OrderStatus.EN_PREPARACION.equals(order.getEstado())) {
+            log.warn("[USE CASE] El pedido {} no está en estado EN_PREPARACION, estado actual: {}", 
+                    order.getId(), order.getEstado());
+            throw new DomainException(OrderErrorMessages.NOT_IN_PREPARATION);
+        }
+    }
+
+    private String generatePin() {
+        Random random = new Random();
+        int pin = 100000 + random.nextInt(900000);
+        return String.valueOf(pin);
+    }
+
+    private void sendSmsNotification(OrderModel order, Long restaurantId, String pin) {
+        try {
+            UserModel client = userPersistencePort.findUserById(order.getIdCliente())
+                    .orElse(null);
+
+            if (client == null || client.getCelular() == null) {
+                log.warn("[USE CASE] No se pudo enviar SMS: cliente o teléfono no encontrado");
+                return;
+            }
+
+            RestaurantModel restaurant = restaurantPersistencePort.findRestaurantById(restaurantId)
+                    .orElse(null);
+
+            String restaurantName = restaurant != null ? restaurant.getNombre() : "el restaurante";
+
+            smsNotificationPort.sendOrderReadyNotification(client.getCelular(), pin, restaurantName);
+            log.info("[USE CASE] Notificación SMS enviada al cliente {}", order.getIdCliente());
+        } catch (Exception e) {
+            log.error("[USE CASE] Error al enviar notificación SMS: {}", e.getMessage());
+        }
     }
 }

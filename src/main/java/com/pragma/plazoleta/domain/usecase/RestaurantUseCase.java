@@ -2,9 +2,11 @@ package com.pragma.plazoleta.domain.usecase;
 
 import com.pragma.plazoleta.domain.api.IRestaurantServicePort;
 import com.pragma.plazoleta.domain.exception.DomainException;
-import com.pragma.plazoleta.domain.exception.ExceptionConstants;
+import com.pragma.plazoleta.domain.exception.message.RestaurantErrorMessages;
+import com.pragma.plazoleta.domain.exception.message.UserErrorMessages;
 import com.pragma.plazoleta.domain.model.RestaurantModel;
 import com.pragma.plazoleta.domain.model.RolModel;
+import com.pragma.plazoleta.domain.model.RoleType;
 import com.pragma.plazoleta.domain.model.UserModel;
 import com.pragma.plazoleta.domain.spi.IRestaurantPersistencePort;
 import com.pragma.plazoleta.domain.spi.IUserPersistencePort;
@@ -56,14 +58,14 @@ public class RestaurantUseCase implements IRestaurantServicePort {
                 .filter(n -> !restaurantPersistencePort.existsRestaurantByNit(n))
                 .orElseThrow(() -> {
                     log.warn("[USE CASE] NIT ya registrado: {}", nit);
-                    return new DomainException(ExceptionConstants.RESTAURANT_NIT_ALREADY_EXISTS_MESSAGE);
+                    return new DomainException(RestaurantErrorMessages.NIT_ALREADY_EXISTS);
                 });
 
         Optional.ofNullable(nombre)
                 .filter(n -> !restaurantPersistencePort.existsRestaurantByName(n))
                 .orElseThrow(() -> {
                     log.warn("[USE CASE] Nombre ya registrado: {}", nombre);
-                    return new DomainException(ExceptionConstants.RESTAURANT_NAME_ALREADY_EXISTS_MESSAGE);
+                    return new DomainException(RestaurantErrorMessages.NAME_ALREADY_EXISTS);
                 });
 
         log.debug("[USE CASE] Validación de duplicidad superada");
@@ -76,7 +78,7 @@ public class RestaurantUseCase implements IRestaurantServicePort {
                 .filter(n -> !ONLY_NUMBERS_PATTERN.matcher(n).matches())
                 .orElseThrow(() -> {
                     log.warn("[USE CASE] Nombre rechazado: es nulo o contiene solo números");
-                    return new DomainException(ExceptionConstants.INVALID_RESTAURANT_NAME_MESSAGE);
+                    return new DomainException(RestaurantErrorMessages.INVALID_NAME);
                 });
 
         log.debug("[USE CASE] Nombre del restaurante válido");
@@ -89,7 +91,7 @@ public class RestaurantUseCase implements IRestaurantServicePort {
                 .filter(n -> ONLY_NUMBERS_PATTERN.matcher(n).matches())
                 .orElseThrow(() -> {
                     log.warn("[USE CASE] NIT rechazado: debe ser únicamente numérico");
-                    return new DomainException(ExceptionConstants.INVALID_NIT_MESSAGE);
+                    return new DomainException(RestaurantErrorMessages.INVALID_NIT);
                 });
 
         log.debug("[USE CASE] NIT válido");
@@ -102,7 +104,7 @@ public class RestaurantUseCase implements IRestaurantServicePort {
                 .filter(t -> PHONE_PATTERN.matcher(t).matches())
                 .orElseThrow(() -> {
                     log.warn("[USE CASE] Teléfono rechazado: formato inválido");
-                    return new DomainException(ExceptionConstants.INVALID_PHONE_MESSAGE);
+                    return new DomainException(RestaurantErrorMessages.INVALID_PHONE);
                 });
 
         log.debug("[USE CASE] Teléfono válido");
@@ -114,15 +116,15 @@ public class RestaurantUseCase implements IRestaurantServicePort {
         UserModel user = userPersistencePort.findUserById(idUsuarioPropietario)
                 .orElseThrow(() -> {
                     log.warn("[USE CASE] Usuario no encontrado: id={}", idUsuarioPropietario);
-                    return new DomainException(ExceptionConstants.USER_NOT_FOUND_MESSAGE);
+                    return new DomainException(UserErrorMessages.USER_NOT_FOUND);
                 });
 
         Optional.ofNullable(user.getRol())
                 .map(RolModel::getNombre)
-                .filter(ExceptionConstants.ROL_PROPIETARIO::equals)
+                .filter(RoleType.PROPIETARIO.getNombre()::equals)
                 .orElseThrow(() -> {
                     log.warn("[USE CASE] Usuario no tiene rol de propietario: id={}", idUsuarioPropietario);
-                    return new DomainException(ExceptionConstants.USER_NOT_OWNER_MESSAGE);
+                    return new DomainException(UserErrorMessages.USER_NOT_OWNER);
                 });
 
         log.debug("[USE CASE] Usuario propietario validado correctamente");

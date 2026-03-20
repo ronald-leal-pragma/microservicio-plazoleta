@@ -8,7 +8,7 @@ import com.pragma.plazoleta.application.handler.IRestaurantHandler;
 import com.pragma.plazoleta.application.mapper.IRestaurantRequestMapper;
 import com.pragma.plazoleta.domain.api.IRestaurantServicePort;
 import com.pragma.plazoleta.domain.exception.DomainException;
-import com.pragma.plazoleta.domain.exception.ExceptionConstants;
+import com.pragma.plazoleta.domain.exception.message.UserErrorMessages;
 import com.pragma.plazoleta.domain.model.RestaurantModel;
 import com.pragma.plazoleta.domain.model.UserModel;
 import com.pragma.plazoleta.domain.spi.IUserPersistencePort;
@@ -40,23 +40,24 @@ public class RestaurantHandler implements IRestaurantHandler {
         UserModel propietario = userPersistencePort.findUserByEmail(restaurantRequestDto.getCorreoPropietario())
                 .orElseThrow(() -> {
                     log.warn("[HANDLER] Propietario no encontrado: correo={}", restaurantRequestDto.getCorreoPropietario());
-                    return new DomainException(ExceptionConstants.USER_NOT_FOUND_MESSAGE);
+                    return new DomainException(UserErrorMessages.USER_NOT_FOUND);
                 });
 
         log.debug("[HANDLER] Propietario encontrado: id={}, nombre={}", propietario.getId(), propietario.getNombre());
 
         RestaurantModel restaurantModel = restaurantRequestMapper.toRestaurant(restaurantRequestDto);
         restaurantModel.setIdUsuarioPropietario(propietario.getId());
-        
+
         RestaurantModel saved = restaurantServicePort.saveRestaurant(restaurantModel);
-        log.info("[HANDLER] Proceso finalizado correctamente para restaurante: {}",
-                restaurantRequestDto.getNombre());
-        RestaurantResponseDto dto = new RestaurantResponseDto();
-        dto.setId(saved.getId());
-        dto.setNombre(saved.getNombre());
-        dto.setNit(saved.getNit());
-        dto.setCreadoEn(saved.getCreadoEn() != null ? saved.getCreadoEn().toString() : null);
-        return dto;
+
+        log.info("[HANDLER] Proceso finalizado correctamente para restaurante: {}", restaurantRequestDto.getNombre());
+
+        return RestaurantResponseDto.builder()
+                .id(saved.getId())
+                .nombre(saved.getNombre())
+                .nit(saved.getNit())
+                .creadoEn(saved.getCreadoEn() != null ? saved.getCreadoEn().toString() : null)
+                .build();
     }
 
     @Override

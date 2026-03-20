@@ -2,9 +2,12 @@ package com.pragma.plazoleta.domain.usecase;
 
 import com.pragma.plazoleta.domain.api.IEmployeeServicePort;
 import com.pragma.plazoleta.domain.exception.DomainException;
-import com.pragma.plazoleta.domain.exception.ExceptionConstants;
+import com.pragma.plazoleta.domain.exception.message.EmployeeErrorMessages;
+import com.pragma.plazoleta.domain.exception.message.RestaurantErrorMessages;
+import com.pragma.plazoleta.domain.exception.message.UserErrorMessages;
 import com.pragma.plazoleta.domain.model.EmployeeRestaurantModel;
 import com.pragma.plazoleta.domain.model.RolModel;
+import com.pragma.plazoleta.domain.model.RoleType;
 import com.pragma.plazoleta.domain.model.UserModel;
 import com.pragma.plazoleta.domain.spi.IEmployeeRestaurantPersistencePort;
 import com.pragma.plazoleta.domain.spi.IRestaurantPersistencePort;
@@ -32,13 +35,12 @@ public class EmployeeUseCase implements IEmployeeServicePort {
         validateRestaurantBelongsToOwner(restaurantId, ownerId);
 
         log.debug("[USE CASE] Asignando rol EMPLEADO al nuevo usuario");
-        employeeModel.setRol(RolModel.builder()
-                .nombre(ExceptionConstants.ROL_EMPLEADO) //TOdo: asignar a enum
-                .id(ExceptionConstants.ROL_EMPLEADO_ID)
-                .build());
+        employeeModel.setRol(RoleType.EMPLEADO.toModel());
 
         log.info("[USE CASE] Todas las validaciones OK, enviando a persistencia");
         UserModel created = userPersistencePort.saveUser(employeeModel);
+
+        validateEmployeeNotAlreadyAssigned(created.getId(), restaurantId);
 
         log.info("[USE CASE] Guardando relación empleado-restaurante");
         EmployeeRestaurantModel employeeRestaurant = EmployeeRestaurantModel.builder()
@@ -59,10 +61,20 @@ public class EmployeeUseCase implements IEmployeeServicePort {
                 .filter(r -> r.getIdUsuarioPropietario().equals(ownerId))
                 .orElseThrow(() -> {
                     log.warn("[USE CASE] Restaurante no pertenece al propietario o no existe");
-                    return new DomainException(ExceptionConstants.RESTAURANT_NOT_BELONGS_TO_OWNER_MESSAGE);
+                    return new DomainException(RestaurantErrorMessages.NOT_BELONGS_TO_OWNER);
                 });
 
         log.debug("[USE CASE] Restaurante validado correctamente");
+    }
+
+    private void validateEmployeeNotAlreadyAssigned(Long employeeId, Long restaurantId) {
+        log.debug("[USE CASE] Validando que empleado id={} no esté asignado a restaurante id={}", 
+                employeeId, restaurantId);
+
+        if (employeeRestaurantPersistencePort.existsByEmployeeAndRestaurant(employeeId, restaurantId)) {
+            log.warn("[USE CASE] Empleado ya está asignado al restaurante");
+            throw new DomainException(EmployeeErrorMessages.ALREADY_ASSIGNED_TO_RESTAURANT);
+        }
     }
 
     private void validateOwnerRole(Long ownerId) {
@@ -71,15 +83,15 @@ public class EmployeeUseCase implements IEmployeeServicePort {
         UserModel owner = userPersistencePort.findUserById(ownerId)
                 .orElseThrow(() -> {
                     log.warn("[USE CASE] Propietario no encontrado: id={}", ownerId);
-                    return new DomainException(ExceptionConstants.USER_NOT_FOUND_MESSAGE);
+                    return new DomainException(UserErrorMessages.USER_NOT_FOUND);
                 });
 
         Optional.ofNullable(owner.getRol())
                 .map(RolModel::getNombre)
-                .filter(ExceptionConstants.ROL_PROPIETARIO::equals)
+                .filter(RoleType.PROPIETARIO.getNombre()::equals)
                 .orElseThrow(() -> {
                     log.warn("[USE CASE] Usuario id={} no tiene rol de propietario", ownerId);
-                    return new DomainException(ExceptionConstants.USER_NOT_OWNER_MESSAGE);
+                    return new DomainException(UserErrorMessages.USER_NOT_OWNER);
                 });
 
         log.debug("[USE CASE] Rol propietario validado correctamente");

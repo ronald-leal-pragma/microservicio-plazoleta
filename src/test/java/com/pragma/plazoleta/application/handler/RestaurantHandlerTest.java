@@ -8,7 +8,7 @@ import com.pragma.plazoleta.application.handler.impl.RestaurantHandler;
 import com.pragma.plazoleta.application.mapper.IRestaurantRequestMapper;
 import com.pragma.plazoleta.domain.api.IRestaurantServicePort;
 import com.pragma.plazoleta.domain.exception.DomainException;
-import com.pragma.plazoleta.domain.exception.ExceptionConstants;
+import com.pragma.plazoleta.domain.exception.message.UserErrorMessages;
 import com.pragma.plazoleta.domain.model.RestaurantModel;
 import com.pragma.plazoleta.domain.model.UserModel;
 import com.pragma.plazoleta.domain.spi.IUserPersistencePort;
@@ -114,7 +114,7 @@ class RestaurantHandlerTest {
         DomainException ex = assertThrows(DomainException.class,
                 () -> restaurantHandler.saveRestaurant(requestDto));
 
-        assertEquals(ExceptionConstants.USER_NOT_FOUND_MESSAGE, ex.getMessage());
+        assertEquals(UserErrorMessages.USER_NOT_FOUND, ex.getMessage());
         verify(restaurantServicePort, never()).saveRestaurant(any());
     }
 

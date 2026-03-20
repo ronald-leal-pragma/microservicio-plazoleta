@@ -41,13 +41,10 @@ public class OrderHandler implements IOrderHandler {
         Long idCliente = getAuthenticatedUserId();
         log.debug("[HANDLER] Cliente autenticado: id={}", idCliente);
 
-        // Mapear request a modelo
         OrderModel orderModel = mapToModel(orderRequestDto);
 
-        // Crear pedido
         OrderModel createdOrder = orderServicePort.createOrder(orderModel, idCliente);
 
-        // Obtener nombre del restaurante para la respuesta
         String nombreRestaurante = restaurantPersistencePort.findRestaurantById(orderRequestDto.getIdRestaurante())
                 .map(RestaurantModel::getNombre)
                 .orElse("Restaurante");
@@ -156,9 +153,43 @@ public class OrderHandler implements IOrderHandler {
                 .build();
     }
 
+    @Override
+    public OrderListResponseDto assignOrderToEmployee(Long orderId) {
+        log.info("[HANDLER] Asignando pedido {} al empleado autenticado", orderId);
+
+        Long employeeId = getAuthenticatedUserId();
+        log.debug("[HANDLER] Empleado autenticado: id={}", employeeId);
+
+        OrderModel assignedOrder = orderServicePort.assignEmployeeToOrder(orderId, employeeId);
+
+        log.info("[HANDLER] Pedido {} asignado exitosamente al empleado {}", orderId, employeeId);
+
+        return mapToListResponse(assignedOrder);
+    }
+
+    @Override
+    public OrderListResponseDto markOrderAsReady(Long orderId) {
+        log.info("[HANDLER] Marcando pedido {} como LISTO", orderId);
+
+        Long employeeId = getAuthenticatedUserId();
+        log.debug("[HANDLER] Empleado autenticado: id={}", employeeId);
+
+        OrderModel readyOrder = orderServicePort.markOrderAsReady(orderId, employeeId);
+
+        log.info("[HANDLER] Pedido {} marcado como LISTO. PIN: {}", orderId, readyOrder.getPin());
+
+        return mapToListResponseWithPin(readyOrder);
+    }
+
+    private OrderListResponseDto mapToListResponseWithPin(OrderModel order) {
+        OrderListResponseDto response = mapToListResponse(order);
+        response.setPin(order.getPin());
+        return response;
+    }
+
     private Long getAuthenticatedUserId() {
         JwtUserDetails userDetails = (JwtUserDetails) SecurityContextHolder
                 .getContext().getAuthentication().getPrincipal();
-        return userDetails.getId();
+        return userDetails.id();
     }
 }

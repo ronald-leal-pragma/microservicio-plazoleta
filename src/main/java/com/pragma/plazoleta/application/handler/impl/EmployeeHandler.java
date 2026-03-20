@@ -51,7 +51,7 @@ public class EmployeeHandler implements IEmployeeHandler {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication != null && authentication.getPrincipal() instanceof JwtUserDetails userDetails) {
-            return userDetails.getId();
+            return userDetails.id();
         }
 
         log.error("[HANDLER] No se pudo extraer la autenticación del contexto de seguridad");

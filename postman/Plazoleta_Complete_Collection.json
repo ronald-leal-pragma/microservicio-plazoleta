@@ -42,6 +42,24 @@
       "item": [
         {
           "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "const token = response.token;",
+                  "",
+                  "if (token) {",
+                  "    pm.environment.set(\"admin_token\", token);",
+                  "} else {",
+                  "    console.error(\"No se encontró el token\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [{"key": "Content-Type", "value": "application/json"}],
@@ -58,6 +76,24 @@
         },
         {
           "name": "Login Propietario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "const token = response.token;",
+                  "",
+                  "if (token) {",
+                  "    pm.environment.set(\"propietario_token\", token);",
+                  "} else {",
+                  "    console.error(\"No se encontró el token\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [{"key": "Content-Type", "value": "application/json"}],
@@ -74,6 +110,24 @@
         },
         {
           "name": "Login Cliente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "const token = response.token;",
+                  "",
+                  "if (token) {",
+                  "    pm.environment.set(\"cliente_token\", token);",
+                  "} else {",
+                  "    console.error(\"No se encontró el token\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [{"key": "Content-Type", "value": "application/json"}],
@@ -90,6 +144,24 @@
         },
         {
           "name": "Login Empleado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "const token = response.token;",
+                  "",
+                  "if (token) {",
+                  "    pm.environment.set(\"empleado_token\", token);",
+                  "} else {",
+                  "    console.error(\"No se encontró el token\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [{"key": "Content-Type", "value": "application/json"}],
@@ -496,6 +568,81 @@
               ]
             },
             "description": "Lista pedidos entregados del restaurante del empleado."
+          }
+        },
+        {
+          "name": "Asignar Pedido a Empleado",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{empleado_token}}"}
+            ],
+            "url": {
+              "raw": "{{plazoleta_url}}/order/1/assign",
+              "host": ["{{plazoleta_url}}"],
+              "path": ["order", "1", "assign"]
+            },
+            "description": "Asigna un pedido PENDIENTE al empleado autenticado y cambia el estado a EN_PREPARACION. Requiere rol EMPLEADO y que el pedido pertenezca al restaurante del empleado."
+          }
+        },
+        {
+          "name": "Asignar Pedido - Error: No Pertenece al Restaurante",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{empleado_token}}"}
+            ],
+            "url": {
+              "raw": "{{plazoleta_url}}/order/999/assign",
+              "host": ["{{plazoleta_url}}"],
+              "path": ["order", "999", "assign"]
+            },
+            "description": "Prueba de error cuando el pedido no pertenece al restaurante del empleado."
+          }
+        },
+        {
+          "name": "Asignar Pedido - Error: No está PENDIENTE",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{empleado_token}}"}
+            ],
+            "url": {
+              "raw": "{{plazoleta_url}}/order/1/assign",
+              "host": ["{{plazoleta_url}}"],
+              "path": ["order", "1", "assign"]
+            },
+            "description": "Prueba de error cuando el pedido ya no está en estado PENDIENTE."
+          }
+        },
+        {
+          "name": "Marcar Pedido como LISTO",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{empleado_token}}"}
+            ],
+            "url": {
+              "raw": "{{plazoleta_url}}/order/1/ready",
+              "host": ["{{plazoleta_url}}"],
+              "path": ["order", "1", "ready"]
+            },
+            "description": "Marca un pedido EN_PREPARACION como LISTO. Genera un PIN de 6 dígitos y envía SMS al cliente. Requiere rol EMPLEADO."
+          }
+        },
+        {
+          "name": "Marcar Pedido LISTO - Error: No está EN_PREPARACION",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{empleado_token}}"}
+            ],
+            "url": {
+              "raw": "{{plazoleta_url}}/order/1/ready",
+              "host": ["{{plazoleta_url}}"],
+              "path": ["order", "1", "ready"]
+            },
+            "description": "Prueba de error cuando el pedido no está en estado EN_PREPARACION."
           }
         }
       ]

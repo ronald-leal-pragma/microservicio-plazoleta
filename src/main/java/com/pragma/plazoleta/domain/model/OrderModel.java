@@ -16,6 +16,7 @@ public class OrderModel {
     private Long idRestaurante;
     private Long idChef;
     private OrderStatus estado;
+    private String pin;
     private Instant creadoEn;
     private Instant actualizadoEn;
     private List<OrderItemModel> items;

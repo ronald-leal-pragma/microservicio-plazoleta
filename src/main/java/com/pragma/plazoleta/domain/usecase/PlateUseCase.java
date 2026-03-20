@@ -2,12 +2,12 @@ package com.pragma.plazoleta.domain.usecase;
 
 import com.pragma.plazoleta.domain.api.IPlateServicePort;
 import com.pragma.plazoleta.domain.exception.DomainException;
-import com.pragma.plazoleta.domain.exception.ExceptionConstants;
+import com.pragma.plazoleta.domain.exception.message.PlateErrorMessages;
+import com.pragma.plazoleta.domain.exception.message.RestaurantErrorMessages;
 import com.pragma.plazoleta.domain.model.PlateModel;
 import com.pragma.plazoleta.domain.model.RestaurantModel;
 import com.pragma.plazoleta.domain.spi.IPlatePersistencePort;
 import com.pragma.plazoleta.domain.spi.IRestaurantPersistencePort;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +35,7 @@ public class PlateUseCase implements IPlateServicePort {
 
         if (platePersistencePort.existsPlateByNameAndRestaurantId(plateModel.getNombre(), plateModel.getIdRestaurante())) {
             log.warn("[USE CASE] El plato ya existe en este restaurante: nombre={}", plateModel.getNombre());
-            throw new DomainException(ExceptionConstants.PLATE_ALREADY_EXISTS_MESSAGE);
+            throw new DomainException(PlateErrorMessages.ALREADY_EXISTS);
         }
 
         plateModel.setActiva(true);
@@ -57,7 +57,7 @@ public class PlateUseCase implements IPlateServicePort {
         PlateModel plate = platePersistencePort.findPlateById(idPlate)
                 .orElseThrow(() -> {
                     log.warn("[USE CASE] Plato no encontrado: id={}", idPlate);
-                    return new DomainException(ExceptionConstants.PLATE_NOT_FOUND_MESSAGE);
+                    return new DomainException(PlateErrorMessages.NOT_FOUND);
                 });
 
         RestaurantModel restaurant = getRestaurantOrThrow(plate.getIdRestaurante());
@@ -80,7 +80,7 @@ public class PlateUseCase implements IPlateServicePort {
         PlateModel plate = platePersistencePort.findPlateById(idPlate)
                 .orElseThrow(() -> {
                     log.warn("[USE CASE] Plato no encontrado: id={}", idPlate);
-                    return new DomainException(ExceptionConstants.PLATE_NOT_FOUND_MESSAGE);
+                    return new DomainException(PlateErrorMessages.NOT_FOUND);
                 });
 
         RestaurantModel restaurant = getRestaurantOrThrow(plate.getIdRestaurante());
@@ -102,7 +102,7 @@ public class PlateUseCase implements IPlateServicePort {
                 .filter(p -> p > MINIMUM_VALID_PRICE)
                 .orElseThrow(() -> {
                     log.warn("[USE CASE] Precio rechazado: debe ser mayor a {}", MINIMUM_VALID_PRICE);
-                    return new DomainException(ExceptionConstants.INVALID_PRICE_MESSAGE);
+                    return new DomainException(PlateErrorMessages.INVALID_PRICE);
                 });
 
         log.debug("[USE CASE] Precio válido");
@@ -117,7 +117,7 @@ public class PlateUseCase implements IPlateServicePort {
                 .orElseThrow(() -> {
                     log.warn("[USE CASE] Usuario no es propietario del restaurante: usuario={}, propietario={}",
                             idUsuarioPropietario, restaurant.getIdUsuarioPropietario());
-                    return new DomainException(ExceptionConstants.USER_NOT_RESTAURANT_OWNER_MESSAGE);
+                    return new DomainException(RestaurantErrorMessages.USER_NOT_RESTAURANT_OWNER);
                 });
 
         log.debug("[USE CASE] Usuario propietario validado correctamente");
@@ -129,7 +129,7 @@ public class PlateUseCase implements IPlateServicePort {
         return restaurantPersistencePort.findRestaurantById(idRestaurante)
                 .orElseThrow(() -> {
                     log.warn("[USE CASE] Restaurante no encontrado: id={}", idRestaurante);
-                    return new DomainException(ExceptionConstants.RESTAURANT_NOT_FOUND_MESSAGE);
+                    return new DomainException(RestaurantErrorMessages.NOT_FOUND);
                 });
     }
 
@@ -138,7 +138,6 @@ public class PlateUseCase implements IPlateServicePort {
         log.info("[USE CASE] Listando platos del restaurante: id={}, categoria={}, page={}, size={}",
                 restaurantId, category, pageable.getPageNumber(), pageable.getPageSize());
 
-        // Validar que el restaurante existe
         getRestaurantOrThrow(restaurantId);
 
         if (category != null && !category.isBlank()) {

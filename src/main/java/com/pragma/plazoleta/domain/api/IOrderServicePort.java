@@ -9,4 +9,8 @@ public interface IOrderServicePort {
     OrderModel createOrder(OrderModel orderModel, Long idCliente);
     
     Page<OrderModel> listOrdersByStatus(OrderStatus status, Long employeeId, Pageable pageable);
+    
+    OrderModel assignEmployeeToOrder(Long orderId, Long employeeId);
+    
+    OrderModel markOrderAsReady(Long orderId, Long employeeId);
 }

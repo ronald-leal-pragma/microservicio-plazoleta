@@ -1,7 +1,8 @@
 package com.pragma.plazoleta.domain.usecase;
 
 import com.pragma.plazoleta.domain.exception.DomainException;
-import com.pragma.plazoleta.domain.exception.ExceptionConstants;
+import com.pragma.plazoleta.domain.exception.message.PlateErrorMessages;
+import com.pragma.plazoleta.domain.exception.message.RestaurantErrorMessages;
 import com.pragma.plazoleta.domain.model.PlateModel;
 import com.pragma.plazoleta.domain.model.RestaurantModel;
 import com.pragma.plazoleta.domain.spi.IPlatePersistencePort;
@@ -100,7 +101,7 @@ class PlateUseCaseTest {
         DomainException ex = assertThrows(DomainException.class,
                 () -> plateUseCase.savePlate(validPlateModel, OWNER_ID));
 
-        assertEquals(ExceptionConstants.INVALID_PRICE_MESSAGE, ex.getMessage());
+        assertEquals(PlateErrorMessages.INVALID_PRICE, ex.getMessage());
         verify(platePersistencePort, never()).savePlate(any());
     }
 
@@ -112,7 +113,7 @@ class PlateUseCaseTest {
         DomainException ex = assertThrows(DomainException.class,
                 () -> plateUseCase.savePlate(validPlateModel, OWNER_ID));
 
-        assertEquals(ExceptionConstants.INVALID_PRICE_MESSAGE, ex.getMessage());
+        assertEquals(PlateErrorMessages.INVALID_PRICE, ex.getMessage());
     }
 
     @Test
@@ -123,7 +124,7 @@ class PlateUseCaseTest {
         DomainException ex = assertThrows(DomainException.class,
                 () -> plateUseCase.savePlate(validPlateModel, OWNER_ID));
 
-        assertEquals(ExceptionConstants.INVALID_PRICE_MESSAGE, ex.getMessage());
+        assertEquals(PlateErrorMessages.INVALID_PRICE, ex.getMessage());
     }
 
     @Test
@@ -134,7 +135,7 @@ class PlateUseCaseTest {
         DomainException ex = assertThrows(DomainException.class,
                 () -> plateUseCase.savePlate(validPlateModel, OWNER_ID));
 
-        assertEquals(ExceptionConstants.RESTAURANT_NOT_FOUND_MESSAGE, ex.getMessage());
+        assertEquals(RestaurantErrorMessages.NOT_FOUND, ex.getMessage());
     }
 
     @Test
@@ -146,7 +147,7 @@ class PlateUseCaseTest {
         DomainException ex = assertThrows(DomainException.class,
                 () -> plateUseCase.savePlate(validPlateModel, OWNER_ID));
 
-        assertEquals(ExceptionConstants.USER_NOT_RESTAURANT_OWNER_MESSAGE, ex.getMessage());
+        assertEquals(RestaurantErrorMessages.USER_NOT_RESTAURANT_OWNER, ex.getMessage());
     }
 
 
@@ -159,7 +160,7 @@ class PlateUseCaseTest {
         DomainException ex = assertThrows(DomainException.class,
                 () -> plateUseCase.savePlate(validPlateModel, OWNER_ID));
 
-        assertEquals(ExceptionConstants.PLATE_ALREADY_EXISTS_MESSAGE, ex.getMessage());
+        assertEquals(PlateErrorMessages.ALREADY_EXISTS, ex.getMessage());
     }
 
 
@@ -184,7 +185,7 @@ class PlateUseCaseTest {
         DomainException ex = assertThrows(DomainException.class,
                 () -> plateUseCase.updatePlate(PLATE_ID, 30000, "desc", OWNER_ID));
 
-        assertEquals(ExceptionConstants.PLATE_NOT_FOUND_MESSAGE, ex.getMessage());
+        assertEquals(PlateErrorMessages.NOT_FOUND, ex.getMessage());
     }
 
     @Test
@@ -193,7 +194,7 @@ class PlateUseCaseTest {
         DomainException ex = assertThrows(DomainException.class,
                 () -> plateUseCase.updatePlate(PLATE_ID, 0, "desc", OWNER_ID));
 
-        assertEquals(ExceptionConstants.INVALID_PRICE_MESSAGE, ex.getMessage());
+        assertEquals(PlateErrorMessages.INVALID_PRICE, ex.getMessage());
         verify(platePersistencePort, never()).updatePlate(any());
     }
 
@@ -244,7 +245,7 @@ class PlateUseCaseTest {
         DomainException ex = assertThrows(DomainException.class,
                 () -> plateUseCase.togglePlateStatus(PLATE_ID, false, OWNER_ID));
 
-        assertEquals(ExceptionConstants.PLATE_NOT_FOUND_MESSAGE, ex.getMessage());
+        assertEquals(PlateErrorMessages.NOT_FOUND, ex.getMessage());
     }
 
 
@@ -290,7 +291,7 @@ class PlateUseCaseTest {
         DomainException ex = assertThrows(DomainException.class,
                 () -> plateUseCase.listPlatesByRestaurant(RESTAURANT_ID, null, pageable));
 
-        assertEquals(ExceptionConstants.RESTAURANT_NOT_FOUND_MESSAGE, ex.getMessage());
+        assertEquals(RestaurantErrorMessages.NOT_FOUND, ex.getMessage());
     }
 
     @Test

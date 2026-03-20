@@ -51,7 +51,7 @@ class ControllerExceptionHandlerTest {
     void handleDomainException_shouldReturn400WithDomainMessage() {
         DomainException ex = new DomainException("El propietario debe ser mayor de edad");
 
-        ResponseEntity<ErrorResponseDto> response = handler.handleDomainException(ex, mockRequest);
+        ResponseEntity<ErrorResponseDto> response = handler.handleDomainException(ex);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody());

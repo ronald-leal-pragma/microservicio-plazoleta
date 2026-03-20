@@ -15,6 +15,7 @@ public class OrderListResponseDto {
     private Long idRestaurante;
     private Long idChef;
     private String estado;
+    private String pin;
     private List<OrderItemResponseDto> items;
     private Integer total;
     private String creadoEn;

@@ -38,6 +38,9 @@ public class OrderEntity {
     @Column(nullable = false, length = 20)
     private OrderStatus estado;
 
+    @Column(name = "pin", length = 6)
+    private String pin;
+
     @CreationTimestamp
     @Column(name = "creado_en", nullable = false, updatable = false)
     private Instant creadoEn;

@@ -4,11 +4,7 @@ import com.pragma.plazoleta.domain.api.IEmployeeServicePort;
 import com.pragma.plazoleta.domain.api.IOrderServicePort;
 import com.pragma.plazoleta.domain.api.IPlateServicePort;
 import com.pragma.plazoleta.domain.api.IRestaurantServicePort;
-import com.pragma.plazoleta.domain.spi.IEmployeeRestaurantPersistencePort;
-import com.pragma.plazoleta.domain.spi.IOrderPersistencePort;
-import com.pragma.plazoleta.domain.spi.IPlatePersistencePort;
-import com.pragma.plazoleta.domain.spi.IRestaurantPersistencePort;
-import com.pragma.plazoleta.domain.spi.IUserPersistencePort;
+import com.pragma.plazoleta.domain.spi.*;
 import com.pragma.plazoleta.domain.usecase.EmployeeUseCase;
 import com.pragma.plazoleta.domain.usecase.OrderUseCase;
 import com.pragma.plazoleta.domain.usecase.PlateUseCase;
@@ -26,11 +22,17 @@ import com.pragma.plazoleta.infrastructure.out.jpa.repository.IEmployeeRestauran
 import com.pragma.plazoleta.infrastructure.out.jpa.repository.IOrderRepository;
 import com.pragma.plazoleta.infrastructure.out.jpa.repository.IPlateRepository;
 import com.pragma.plazoleta.infrastructure.out.jpa.repository.IRestaurantRepository;
+import com.pragma.plazoleta.infrastructure.out.twilio.TwilioSmsAdapter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.xml.Jaxb2RootElementHttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
@@ -44,13 +46,40 @@ public class BeanConfiguration {
     private final IOrderEntityMapper orderEntityMapper;
     private final IEmployeeRestaurantRepository employeeRestaurantRepository;
     private final IEmployeeRestaurantEntityMapper employeeRestaurantEntityMapper;
+    private final TwilioSmsAdapter twilioSmsAdapter;
 
     @Value("${usuarios.service.url}")
     private String usuariosServiceUrl;
 
     @Bean
     public RestTemplate restTemplate() {
-        return new RestTemplate();
+        RestTemplate restTemplate = new RestTemplate();
+
+        // Reordenar/ajustar los message converters para priorizar JSON
+        List<HttpMessageConverter<?>> converters = new ArrayList<>(restTemplate.getMessageConverters());
+
+        // Eliminar convertidor JAXB si existe (evita enviar XML por defecto)
+        converters.removeIf(c -> c instanceof Jaxb2RootElementHttpMessageConverter);
+
+        // Asegurar que el conversor Jackson esté al inicio
+        MappingJackson2HttpMessageConverter jacksonConverter = null;
+        for (HttpMessageConverter<?> c : converters) {
+            if (c instanceof MappingJackson2HttpMessageConverter) {
+                jacksonConverter = (MappingJackson2HttpMessageConverter) c;
+                break;
+            }
+        }
+
+        if (jacksonConverter != null) {
+            converters.remove(jacksonConverter);
+            converters.add(0, jacksonConverter);
+        } else {
+            // Si no existe, añadir uno nuevo al inicio
+            converters.add(0, new MappingJackson2HttpMessageConverter());
+        }
+
+        restTemplate.setMessageConverters(converters);
+        return restTemplate;
     }
 
     @Bean
@@ -96,6 +125,7 @@ public class BeanConfiguration {
     @Bean
     public IOrderServicePort orderServicePort() {
         return new OrderUseCase(orderPersistencePort(), restaurantPersistencePort(), 
-                platePersistencePort(), employeeRestaurantPersistencePort());
+                platePersistencePort(), employeeRestaurantPersistencePort(),
+                twilioSmsAdapter, userPersistencePort());
     }
 }

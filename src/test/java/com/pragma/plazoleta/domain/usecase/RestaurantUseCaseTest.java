@@ -1,7 +1,8 @@
 package com.pragma.plazoleta.domain.usecase;
 
 import com.pragma.plazoleta.domain.exception.DomainException;
-import com.pragma.plazoleta.domain.exception.ExceptionConstants;
+import com.pragma.plazoleta.domain.exception.message.RestaurantErrorMessages;
+import com.pragma.plazoleta.domain.exception.message.UserErrorMessages;
 import com.pragma.plazoleta.domain.model.RestaurantModel;
 import com.pragma.plazoleta.domain.model.RolModel;
 import com.pragma.plazoleta.domain.model.UserModel;
@@ -85,7 +86,7 @@ class RestaurantUseCaseTest {
         DomainException ex = assertThrows(DomainException.class,
                 () -> restaurantUseCase.saveRestaurant(validRestaurantModel));
 
-        assertEquals(ExceptionConstants.INVALID_RESTAURANT_NAME_MESSAGE, ex.getMessage());
+        assertEquals(RestaurantErrorMessages.INVALID_NAME, ex.getMessage());
         verify(restaurantPersistencePort, never()).saveRestaurant(any());
     }
 
@@ -97,7 +98,7 @@ class RestaurantUseCaseTest {
         DomainException ex = assertThrows(DomainException.class,
                 () -> restaurantUseCase.saveRestaurant(validRestaurantModel));
 
-        assertEquals(ExceptionConstants.INVALID_RESTAURANT_NAME_MESSAGE, ex.getMessage());
+        assertEquals(RestaurantErrorMessages.INVALID_NAME, ex.getMessage());
     }
 
     @Test
@@ -108,7 +109,7 @@ class RestaurantUseCaseTest {
         DomainException ex = assertThrows(DomainException.class,
                 () -> restaurantUseCase.saveRestaurant(validRestaurantModel));
 
-        assertEquals(ExceptionConstants.INVALID_NIT_MESSAGE, ex.getMessage());
+        assertEquals(RestaurantErrorMessages.INVALID_NIT, ex.getMessage());
     }
 
     @Test
@@ -119,7 +120,7 @@ class RestaurantUseCaseTest {
         DomainException ex = assertThrows(DomainException.class,
                 () -> restaurantUseCase.saveRestaurant(validRestaurantModel));
 
-        assertEquals(ExceptionConstants.INVALID_NIT_MESSAGE, ex.getMessage());
+        assertEquals(RestaurantErrorMessages.INVALID_NIT, ex.getMessage());
     }
 
 
@@ -131,7 +132,7 @@ class RestaurantUseCaseTest {
         DomainException ex = assertThrows(DomainException.class,
                 () -> restaurantUseCase.saveRestaurant(validRestaurantModel));
 
-        assertEquals(ExceptionConstants.INVALID_PHONE_MESSAGE, ex.getMessage());
+        assertEquals(RestaurantErrorMessages.INVALID_PHONE, ex.getMessage());
     }
 
     @Test
@@ -158,7 +159,7 @@ class RestaurantUseCaseTest {
         DomainException ex = assertThrows(DomainException.class,
                 () -> restaurantUseCase.saveRestaurant(validRestaurantModel));
 
-        assertEquals(ExceptionConstants.USER_NOT_FOUND_MESSAGE, ex.getMessage());
+        assertEquals(UserErrorMessages.USER_NOT_FOUND, ex.getMessage());
     }
 
     @Test
@@ -170,7 +171,7 @@ class RestaurantUseCaseTest {
         DomainException ex = assertThrows(DomainException.class,
                 () -> restaurantUseCase.saveRestaurant(validRestaurantModel));
 
-        assertEquals(ExceptionConstants.USER_NOT_OWNER_MESSAGE, ex.getMessage());
+        assertEquals(UserErrorMessages.USER_NOT_OWNER, ex.getMessage());
     }
 
     @Test
@@ -182,7 +183,7 @@ class RestaurantUseCaseTest {
         DomainException ex = assertThrows(DomainException.class,
                 () -> restaurantUseCase.saveRestaurant(validRestaurantModel));
 
-        assertEquals(ExceptionConstants.USER_NOT_OWNER_MESSAGE, ex.getMessage());
+        assertEquals(UserErrorMessages.USER_NOT_OWNER, ex.getMessage());
     }
 
 
@@ -195,7 +196,7 @@ class RestaurantUseCaseTest {
         DomainException ex = assertThrows(DomainException.class,
                 () -> restaurantUseCase.saveRestaurant(validRestaurantModel));
 
-        assertEquals(ExceptionConstants.RESTAURANT_NIT_ALREADY_EXISTS_MESSAGE, ex.getMessage());
+        assertEquals(RestaurantErrorMessages.NIT_ALREADY_EXISTS, ex.getMessage());
     }
 
     @Test
@@ -208,7 +209,7 @@ class RestaurantUseCaseTest {
         DomainException ex = assertThrows(DomainException.class,
                 () -> restaurantUseCase.saveRestaurant(validRestaurantModel));
 
-        assertEquals(ExceptionConstants.RESTAURANT_NAME_ALREADY_EXISTS_MESSAGE, ex.getMessage());
+        assertEquals(RestaurantErrorMessages.NAME_ALREADY_EXISTS, ex.getMessage());
     }
 
 

@@ -58,7 +58,7 @@ public class ControllerExceptionHandler {
 
     @ExceptionHandler(DomainException.class)
     public ResponseEntity<ErrorResponseDto> handleDomainException(
-            DomainException ex, HttpServletRequest request) {
+            DomainException ex) {
         log.warn("[EXCEPTION] 400 - Validación de dominio fallida: {}", ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)

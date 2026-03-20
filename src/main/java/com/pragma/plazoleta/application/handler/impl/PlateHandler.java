@@ -120,6 +120,6 @@ public class PlateHandler implements IPlateHandler {
     private Long getAuthenticatedUserId() {
         JwtUserDetails userDetails = (JwtUserDetails) SecurityContextHolder
                 .getContext().getAuthentication().getPrincipal();
-        return userDetails.getId();
+        return userDetails.id();
     }
 }

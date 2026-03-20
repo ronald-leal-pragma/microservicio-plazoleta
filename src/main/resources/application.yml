@@ -26,5 +26,10 @@ usuarios:
   service:
     url: http://localhost:8082
 
+twilio:
+  account-sid: ${TWILIO_ACCOUNT_SID:AC_default_sid}
+  auth-token: ${TWILIO_AUTH_TOKEN:default_token}
+  phone-number: ${TWILIO_PHONE_NUMBER:+123456789}
+
 appdescription: API del microservicio Plazoleta - gestión de restaurantes y platos
 appversion: 1.0.0
