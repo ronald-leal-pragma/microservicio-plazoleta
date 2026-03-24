@@ -35,3 +35,31 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# Local environment / secrets
+# Ignorar archivos locales de configuración que pueden contener credenciales
+/src/main/resources/application.yml
+/src/main/resources/application-*.yml
+.env
+.env.*
+
+# Keystores, keys and certs
+*.jks
+*.keystore
+*.p12
+*.pem
+*.key
+
+# Logs and temp
+*.log
+.DS_Store
+tmp/
+
+# OS files
+.DS_Store
+
+# IDE misc (already covered but keep safe)
+.idea/
+*.iml
+
+
