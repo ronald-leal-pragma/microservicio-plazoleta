@@ -22,7 +22,6 @@ import com.pragma.plazoleta.infrastructure.out.jpa.repository.IEmployeeRestauran
 import com.pragma.plazoleta.infrastructure.out.jpa.repository.IOrderRepository;
 import com.pragma.plazoleta.infrastructure.out.jpa.repository.IPlateRepository;
 import com.pragma.plazoleta.infrastructure.out.jpa.repository.IRestaurantRepository;
-import com.pragma.plazoleta.infrastructure.out.twilio.TwilioSmsAdapter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -47,7 +46,7 @@ public class BeanConfiguration {
     private final IOrderEntityMapper orderEntityMapper;
     private final IEmployeeRestaurantRepository employeeRestaurantRepository;
     private final IEmployeeRestaurantEntityMapper employeeRestaurantEntityMapper;
-    private final TwilioSmsAdapter twilioSmsAdapter;
+    
 
     @Value("${usuarios.service.url}")
     private String usuariosServiceUrl;
@@ -56,13 +55,10 @@ public class BeanConfiguration {
     public RestTemplate restTemplate() {
         RestTemplate restTemplate = new RestTemplate();
 
-        // Reordenar/ajustar los message converters para priorizar JSON
         List<HttpMessageConverter<?>> converters = new ArrayList<>(restTemplate.getMessageConverters());
 
-        // Eliminar convertidor JAXB si existe (evita enviar XML por defecto)
         converters.removeIf(c -> c instanceof Jaxb2RootElementHttpMessageConverter);
 
-        // Asegurar que el conversor Jackson esté al inicio
         MappingJackson2HttpMessageConverter jacksonConverter = null;
         for (HttpMessageConverter<?> c : converters) {
             if (c instanceof MappingJackson2HttpMessageConverter) {
@@ -75,7 +71,6 @@ public class BeanConfiguration {
             converters.remove(jacksonConverter);
             converters.add(0, jacksonConverter);
         } else {
-            // Si no existe, añadir uno nuevo al inicio
             converters.add(0, new MappingJackson2HttpMessageConverter());
         }
 
@@ -124,9 +119,14 @@ public class BeanConfiguration {
     }
 
     @Bean
-    public IOrderServicePort orderServicePort() {
-        return new OrderUseCase(orderPersistencePort(), restaurantPersistencePort(), 
-                platePersistencePort(), employeeRestaurantPersistencePort(),
-                twilioSmsAdapter, userPersistencePort());
+    public ISmsNotificationPort smsNotificationPort() {
+        return new com.pragma.plazoleta.infrastructure.out.rest.SmsRestAdapter(restTemplate());
+    }
+
+    @Bean
+    public IOrderServicePort orderServicePort(ITraceabilityNotificationPort traceabilityNotificationPort, ISmsNotificationPort smsNotificationPort) {
+        return new OrderUseCase(orderPersistencePort(), restaurantPersistencePort(),
+            platePersistencePort(), employeeRestaurantPersistencePort(),
+            smsNotificationPort, userPersistencePort(), traceabilityNotificationPort);
     }
 }

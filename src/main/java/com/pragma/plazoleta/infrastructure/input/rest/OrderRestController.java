@@ -139,4 +139,30 @@ public class OrderRestController {
         log.info("[REST] Pedido {} entregado exitosamente con PIN verificado", orderId);
         return ResponseEntity.ok(deliveredOrder);
     }
+
+    @Operation(summary = "Marcar pedido como CANCELADO",
+            description = "El empleado marca un pedido cancelado")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Pedido marcado como cancelado"),
+            @ApiResponse(responseCode = "400", description = "El pedido no está en estado PENDIENTE",
+                    content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autorizado",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "El empleado no pertenece al restaurante del pedido",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Pedido no encontrado",
+                    content = @Content)
+    })
+    @DeleteMapping("/{orderId}/deleted")
+    public ResponseEntity<OrderListResponseDto> markOrderAsDelivered(
+            @PathVariable Long orderId) {
+
+        log.info("[REST] DELETE /order/{}/deleted - Intento de eliminar orden", orderId);
+
+        OrderListResponseDto deletedOrder = orderHandler.markOrderAsDeleted(orderId);
+
+        log.info("[REST] Pedido {} cancelado exitosamente.", orderId);
+        return ResponseEntity.ok(deletedOrder);
+    }
+
 }

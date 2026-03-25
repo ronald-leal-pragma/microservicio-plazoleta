@@ -33,6 +33,7 @@ public class OrderUseCase implements IOrderServicePort {
     private final IEmployeeRestaurantPersistencePort employeeRestaurantPersistencePort;
     private final ISmsNotificationPort smsNotificationPort;
     private final IUserPersistencePort userPersistencePort;
+    private final ITraceabilityNotificationPort traceabilityNotificationPort;
 
     @Override
     public OrderModel createOrder(OrderModel orderModel, Long idCliente) {
@@ -49,7 +50,16 @@ public class OrderUseCase implements IOrderServicePort {
 
         log.info("[USE CASE] Todas las validaciones OK, persistiendo pedido");
 
-        return orderPersistencePort.saveOrder(orderModel);
+        OrderModel savedOrder = orderPersistencePort.saveOrder(orderModel);
+
+        try {
+            traceabilityNotificationPort.sendTraceabilityLog(savedOrder.getId(), savedOrder.getIdCliente(),
+                    "CREACION", savedOrder.getEstado().name());
+        } catch (Exception e) {
+            log.error("[USE CASE] Error enviando log de trazabilidad: {}", e.getMessage());
+        }
+
+        return savedOrder;
     }
 
     @Override
@@ -162,6 +172,13 @@ public class OrderUseCase implements IOrderServicePort {
         OrderModel savedOrder = orderPersistencePort.saveOrder(updatedOrder);
         log.info("[USE CASE] Pedido {} asignado al empleado {} con estado EN_PREPARACION", orderId, employeeId);
 
+        try {
+            java.util.Map<String, String> metadata = java.util.Map.of("restaurantId", String.valueOf(employeeRestaurant.getIdRestaurante()), "employeeId", String.valueOf(employeeId));
+            traceabilityNotificationPort.sendTraceabilityLog(orderId, order.getIdCliente(), order.getEstado().name(), savedOrder.getEstado().name(), metadata);
+        } catch (Exception e) {
+            log.error("[USE CASE] Error enviando log de trazabilidad: {}", e.getMessage());
+        }
+
         return savedOrder;
     }
 
@@ -170,6 +187,19 @@ public class OrderUseCase implements IOrderServicePort {
             log.warn("[USE CASE] El pedido {} no está en estado PENDIENTE, estado actual: {}", 
                     order.getId(), order.getEstado());
             throw new DomainException(OrderErrorMessages.NOT_PENDING);
+        }
+    }
+
+    private void validateOrderCanBeCanceled(OrderModel order) {
+        if (order.getEstado() != OrderStatus.PENDIENTE && order.getEstado() != OrderStatus.CANCELADO) {
+            log.warn("[USE CASE] No se puede cancelar el pedido {}. Estado actual: {}",
+                    order.getId(), order.getEstado());
+            throw new DomainException(OrderErrorMessages.ORDER_ALREADY_IN_PREPARATION);
+        }
+
+        if (order.getEstado() == OrderStatus.CANCELADO) {
+            log.info("[USE CASE] El pedido {} ya fue cancelado previamente", order.getId());
+            throw new DomainException(OrderErrorMessages.ORDER_CANCEL);
         }
     }
 
@@ -211,6 +241,12 @@ public class OrderUseCase implements IOrderServicePort {
 
         sendSmsNotification(order, employeeRestaurant.getIdRestaurante(), pin);
 
+        try {
+            traceabilityNotificationPort.sendTraceabilityLog(orderId, order.getIdCliente(), order.getEstado().name(), savedOrder.getEstado().name());
+        } catch (Exception e) {
+            log.error("[USE CASE] Error enviando log de trazabilidad: {}", e.getMessage());
+        }
+
         return savedOrder;
     }
 
@@ -243,7 +279,47 @@ public class OrderUseCase implements IOrderServicePort {
                 .build();
 
         log.info("[USE CASE] Pedido {} listo para ser persistido como ENTREGADO", orderId);
-        return orderPersistencePort.saveOrder(updatedOrder);
+        OrderModel savedOrder = orderPersistencePort.saveOrder(updatedOrder);
+
+        try {
+            traceabilityNotificationPort.sendTraceabilityLog(orderId, order.getIdCliente(), order.getEstado().name(), savedOrder.getEstado().name());
+        } catch (Exception e) {
+            log.error("[USE CASE] Error enviando log de trazabilidad: {}", e.getMessage());
+        }
+
+        return savedOrder;
+    }
+
+    @Override
+    public OrderModel markOrderAsCanceled(Long orderId, Long employeeId) {
+        log.info("[USE CASE] Intentando cancelar pedido {}. Usuario: {}", orderId, employeeId);
+
+        OrderModel order = getOrderById(orderId);
+
+        validateOrderCanBeCanceled(order);
+
+        OrderModel canceledOrder = OrderModel.builder()
+                .id(order.getId())
+                .idCliente(order.getIdCliente())
+                .idRestaurante(order.getIdRestaurante())
+                .idChef(order.getIdChef())
+                .estado(OrderStatus.CANCELADO)
+                .pin(order.getPin())
+                .items(order.getItems())
+                .creadoEn(order.getCreadoEn())
+                .build();
+
+        log.info("[USE CASE] Pedido {} listo para ser persistido como CANCELADO", orderId);
+
+        OrderModel savedOrder = orderPersistencePort.saveOrder(canceledOrder);
+
+        try {
+            traceabilityNotificationPort.sendTraceabilityLog(orderId, order.getIdCliente(), order.getEstado().name(), savedOrder.getEstado().name());
+        } catch (Exception e) {
+            log.error("[USE CASE] Error enviando log de trazabilidad: {}", e.getMessage());
+        }
+
+        return savedOrder;
     }
 
     private void validateOrderIsReady(OrderModel order) {

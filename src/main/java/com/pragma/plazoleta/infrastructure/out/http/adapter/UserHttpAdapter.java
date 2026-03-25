@@ -27,6 +27,7 @@ public class UserHttpAdapter implements IUserPersistencePort {
     private final RestTemplate restTemplate;
     private final String usuariosServiceUrl;
     private final ObjectMapper objectMapper = new ObjectMapper();
+
     @Override
     public Optional<UserModel> findUserById(Long id) {
         String url = String.format("%s/user/%d", usuariosServiceUrl, id);
@@ -123,6 +124,7 @@ public class UserHttpAdapter implements IUserPersistencePort {
                 .nombre(dto.getNombre())
                 .apellido(dto.getApellido())
                 .correo(dto.getCorreo())
+                .celular(dto.getCelular())
                 .rol(Optional.ofNullable(dto.getRol())
                         .map(rolNombre -> RolModel.builder().nombre(rolNombre).build())
                         .orElse(null))

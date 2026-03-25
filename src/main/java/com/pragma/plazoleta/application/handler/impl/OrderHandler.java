@@ -195,6 +195,20 @@ public class OrderHandler implements IOrderHandler {
         return mapToListResponseWithPin(updateOrder);
     }
 
+    @Override
+    public OrderListResponseDto markOrderAsDeleted(Long orderId) {
+        log.info("[HANDLER] Marcando pedido {} como CANCELADO", orderId);
+
+        Long employeeId = getAuthenticatedUserId();
+        log.debug("[HANDLER] Usuario autenticado: id={}", employeeId);
+
+        OrderModel canceledOrder = orderServicePort.markOrderAsCanceled(orderId, employeeId);
+
+        log.info("[HANDLER] Pedido {} marcado como CANCELADO.", orderId);
+
+        return mapToListResponse(canceledOrder);
+    }
+
     private OrderListResponseDto mapToListResponseWithPin(OrderModel order) {
         OrderListResponseDto response = mapToListResponse(order);
         response.setPin(order.getPin());

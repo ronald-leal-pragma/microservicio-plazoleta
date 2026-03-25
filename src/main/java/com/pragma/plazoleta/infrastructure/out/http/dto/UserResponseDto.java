@@ -14,5 +14,6 @@ public class UserResponseDto {
     private String apellido;
     @JsonProperty("email")
     private String correo;
+    private String celular;
     private String rol;
 }

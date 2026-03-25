@@ -10,4 +10,6 @@ public final class OrderErrorMessages {
     public static final String ORDER_NOT_READY_FOR_DELIVERY = "Solo se pueden marcar como entregados pedidos en estado LISTO";
     public static final String NOT_BELONGS_TO_RESTAURANT = "El pedido no pertenece al restaurante del empleado";
     public static final String INVALID_PIN = "El PIN proporcionado es incorrecto";
+    public static final String ORDER_ALREADY_IN_PREPARATION = "Lo sentimos, tu pedido ya está en preparación y no puede cancelarse";
+    public static final String ORDER_CANCEL = "El pedido ya se encuentra cancelado";
 }

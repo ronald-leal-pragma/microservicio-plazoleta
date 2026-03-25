@@ -25,6 +25,6 @@ usuarios:
     url: http://localhost:8082
 
 twilio:
-  account-sid: AC_TEST_SID
-  auth-token: TEST_AUTH_TOKEN
+
+
   phone-number: +15005550006
